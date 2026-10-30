@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>管理画面 | ソノサポ</title>
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0C0C0C">
+<link rel="icon" href="assets/favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="config.js"></script>
+<script src="common.js"></script>
+<style>
+.back{display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:700;color:var(--muted);text-decoration:none;border:1px solid var(--border);border-radius:999px;padding:5px 11px 5px 7px;}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center;}
+.stat b{display:block;font-family:"Bebas Neue",sans-serif;font-size:28px;color:var(--orange);line-height:1.1;}
+.stat span{font-size:11px;color:var(--muted);}
+.uni{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 13px;margin-bottom:8px;}
+.uni.has{border-color:rgba(255,147,5,.35);}
+.uni-top{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.uni-name{font-size:14px;font-weight:800;flex:1;min-width:0;}
+.uni-name small{font-size:11px;color:var(--orange-light);font-weight:700;margin-left:6px;}
+.uni-kind{font-size:10px;color:var(--dim);}
+.uni-cnt{font:600 11px "JetBrains Mono",monospace;color:var(--muted);white-space:nowrap;}
+.uni-body{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.uni.open .uni-body{display:block;}
+.code-row{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.code-row .k{font-size:11.5px;color:var(--muted);width:64px;flex-shrink:0;}
+.code{font:600 16px "JetBrains Mono",monospace;letter-spacing:.12em;background:var(--black);border:1px solid var(--border-light);border-radius:8px;padding:5px 10px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.lab{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px;}
+.lab input[type=color]{width:38px;height:38px;border:none;background:none;padding:0;border-radius:8px;}
+.lab .field{flex:1;padding:8px 10px;font-size:14px;}
+.lab button{width:32px;height:32px;border-radius:8px;border:1px solid var(--border-light);background:var(--black);color:var(--muted);}
+.howto{font-size:13px;line-height:1.9;color:var(--muted);}
+.howto b{color:var(--text);}
+</style>
+</head>
+<body>
+<div class="page-head">
+  <div><a class="back" href="index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>ホーム</a>
+  <div class="page-title" style="margin-top:10px;">管理画面</div><div class="page-sub">ADMIN ー 管理者だけが見られます</div></div>
+</div>
+
+<div class="wrap">
+  <div class="seg" id="tabs"><button data-t="univ" class="on">大学・コード</button><button data-t="labels">ラベル</button><button data-t="help">使い方</button></div>
+
+  <!-- 大学・招待コード -->
+  <section id="t-univ">
+    <div class="stats"><div class="stat"><b id="s-univ">-</b><span>参加中の大学</span></div><div class="stat"><b id="s-mem">-</b><span>部員</span></div><div class="stat"><b id="s-rev">-</b><span>確認者</span></div></div>
+    <input class="field" id="u-q" placeholder="大学名・都道府県で絞り込み">
+    <div style="display:flex;gap:8px;margin:10px 0 12px;flex-wrap:wrap;">
+      <button class="btn ghost sm" id="csv">招待コード一覧をCSVで保存</button>
+      <button class="btn ghost sm" id="only-active">参加中の大学だけ</button>
+      <button class="btn ghost orange sm" id="add-u">＋ 大学を追加</button>
+    </div>
+    <div id="u-list"><div class="loading">読み込み中</div></div>
+  </section>
+
+  <!-- ラベル -->
+  <section id="t-labels" class="hidden">
+    <p class="hint" style="margin:14px 0 12px;">資料につけるラベルです。名前・色を変えると、すべての資料に反映されます。ラベルを消すと、資料からも外れます。</p>
+    <div id="l-list"></div>
+    <div class="lab"><input type="color" id="nl-color" value="#FF9305"><input class="field" id="nl-name" maxlength="30" placeholder="新しいラベル名"><button id="nl-add" style="width:auto;padding:0 12px;color:var(--orange-light);border-color:rgba(255,147,5,.5);">追加</button></div>
+  </section>
+
+  <!-- 使い方 -->
+  <section id="t-help" class="hidden">
+    <div class="howto" style="margin-top:14px;">
+      <p><b>招待コードの配り方</b><br>各大学の「部員用」コードはエコー部の代表者へ、「確認者用」コードは指導医の先生へ渡してください。「招待リンクをコピー」を使うと、コードが入った状態で開くリンクを送れます。</p><br>
+      <p><b>コードが外に漏れたら</b><br>「作り直す」を押すと、古いコードは使えなくなります（すでに参加している人はそのまま使えます）。</p><br>
+      <p><b>まなぶの資料</b><br>まなぶタブの右上「編集」から、項目の追加・並べ替え・削除、資料（PDF・画像・リンク）の追加とラベル付けができます。</p><br>
+      <p><b>お知らせ</b><br>ホーム右上のベルから、全国の参加者にお知らせを出せます。</p><br>
+      <p><b>管理者を増やす</b><br>Supabase の SQL Editor で、SETUP.md の「管理者アカウントを作る」の手順をもう一度行ってください。</p>
+    </div>
+  </section>
+</div>
+
+<script>
+let UNIS = [], CODES = [], COUNTS = {}, onlyActive = false;
+const openU = new Set();
+SS.$$('#tabs button').forEach(b => b.onclick = () => {
+  SS.$$('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+  ['univ','labels','help'].forEach(t => SS.$('#t-' + t).classList.toggle('hidden', t !== b.dataset.t));
+});
+
+async function loadUnis(){
+  const [u, c, n] = await Promise.all([
+    sb.from('universities').select('*').order('sort_order'),
+    sb.from('invite_codes').select('*'),
+    sb.rpc('admin_member_counts'),
+  ]);
+  if(u.error || c.error){ SS.$('#u-list').innerHTML = '<div class="empty">読み込めませんでした</div>'; return; }
+  UNIS = u.data; CODES = c.data; COUNTS = {};
+  (n.data || []).forEach(r => COUNTS[r.university_id] = r);
+  SS.$('#s-univ').textContent = Object.keys(COUNTS).length;
+  SS.$('#s-mem').textContent = (n.data || []).reduce((a, r) => a + Number(r.members), 0);
+  SS.$('#s-rev').textContent = (n.data || []).reduce((a, r) => a + Number(r.reviewers), 0);
+  renderUnis();
+}
+const codeOf = (uid, role) => (CODES.find(c => c.university_id === uid && c.role === role) || {}).code || '';
+const fmt = c => c ? c.slice(0, 4) + '-' + c.slice(4) : '—';
+const inviteLink = c => new URL('index.html?code=' + fmt(c), location.href).href;
+function renderUnis(){
+  const q = SS.$('#u-q').value.trim();
+  const list = UNIS.filter(u => (!q || (u.name + (u.short_name || '') + (u.prefecture || '') + (u.group_name || '')).includes(q)) && (!onlyActive || COUNTS[u.id]));
+  SS.$('#u-list').innerHTML = list.map(u => {
+    const c = COUNTS[u.id], m = c ? Number(c.members) : 0, r = c ? Number(c.reviewers) : 0;
+    return `<div class="uni${c ? ' has' : ''}${openU.has(u.id) ? ' open' : ''}" data-id="${u.id}">
+      <div class="uni-top" data-open="${u.id}"><div class="uni-name">${SS.esc(u.name)}${u.group_name ? `<small>${SS.esc(u.group_name)}</small>` : ''}<div class="uni-kind">${SS.esc([u.prefecture, u.kind].filter(Boolean).join(' ・ '))}</div></div>
+        <span class="uni-cnt">部員 ${m} ／ 確認者 ${r}</span></div>
+      <div class="uni-body">
+        ${['member','reviewer'].map(role => `<div class="code-row"><span class="k">${role === 'member' ? '部員用' : '確認者用'}</span><span class="code">${fmt(codeOf(u.id, role))}</span>
+          <button class="btn ghost sm" data-copy="${codeOf(u.id, role)}">コピー</button>
+          <button class="btn ghost sm" data-link="${codeOf(u.id, role)}">招待リンク</button>
+          <button class="btn danger sm" data-regen="${u.id}|${role}">作り直す</button></div>`).join('')}
+        <div class="grid2" style="margin-top:12px;">
+          <div><label class="label" style="margin-top:0;">大学名</label><input class="field" data-f="name" value="${SS.esc(u.name)}"></div>
+          <div><label class="label" style="margin-top:0;">略称</label><input class="field" data-f="short_name" value="${SS.esc(u.short_name || '')}"></div>
+        </div>
+        <label class="label">団体名</label><input class="field" data-f="group_name" value="${SS.esc(u.group_name || '')}" placeholder="例：K-PICS">
+        <div style="display:flex;gap:8px;margin-top:10px;"><button class="btn sm" data-save="${u.id}">保存</button></div>
+      </div></div>`;
+  }).join('') || '<div class="empty">該当なし</div>';
+}
+SS.$('#u-q').addEventListener('input', renderUnis);
+SS.$('#only-active').onclick = (e) => { onlyActive = !onlyActive; e.target.classList.toggle('orange', onlyActive); renderUnis(); };
+document.addEventListener('click', async ev => {
+  const t = ev.target;
+  const op = t.closest('[data-open]'); if(op){ const id = +op.dataset.open; openU.has(id) ? openU.delete(id) : openU.add(id); op.closest('.uni').classList.toggle('open'); return; }
+  const cp = t.closest('[data-copy]'); if(cp){ await copy(fmt(cp.dataset.copy)); return; }
+  const lk = t.closest('[data-link]'); if(lk){ await copy(inviteLink(lk.dataset.link)); return; }
+  const rg = t.closest('[data-regen]');
+  if(rg){
+    const [uid, role] = rg.dataset.regen.split('|');
+    if(!confirm('コードを作り直すと、古いコードは使えなくなります。よろしいですか？\n（すでに参加している人はそのまま使えます）')) return;
+    const { error } = await sb.rpc('admin_regenerate_code', { p_univ: +uid, p_role: role });
+    if(error) return SS.toast(SS.friendly(error));
+    SS.toast('作り直しました'); loadUnis(); return;
+  }
+  const sv = t.closest('[data-save]');
+  if(sv){
+    const box = sv.closest('.uni'), row = {};
+    box.querySelectorAll('[data-f]').forEach(i => row[i.dataset.f] = i.value.trim() || null);
+    if(!row.name) return SS.toast('大学名は空にできません');
+    const { error } = await sb.from('universities').update(row).eq('id', +sv.dataset.save);
+    if(error) return SS.toast(SS.friendly(error));
+    SS.toast('保存しました'); loadUnis();
+  }
+});
+async function copy(text){
+  try{ await navigator.clipboard.writeText(text); SS.toast('コピーしました：' + text); }
+  catch(e){ prompt('コピーしてください', text); }
+}
+SS.$('#csv').onclick = () => {
+  const rows = [['大学','略称','都道府県','団体名','部員用コード','確認者用コード','部員用リンク','確認者用リンク']].concat(
+    UNIS.map(u => [u.name, u.short_name || '', u.prefecture || '', u.group_name || '', fmt(codeOf(u.id,'member')), fmt(codeOf(u.id,'reviewer')), inviteLink(codeOf(u.id,'member')), inviteLink(codeOf(u.id,'reviewer'))]));
+  const csv = '﻿' + rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = 'sonosapo-invite-codes.csv'; a.dataset.noCurtain = ''; document.body.appendChild(a); a.click(); a.remove();
+  SS.toast('保存しました（取り扱いに注意してください）');
+};
+SS.$('#add-u').onclick = async () => {
+  const name = prompt('追加する大学の正式名称'); if(!name || !name.trim()) return;
+  const max = UNIS.reduce((m, u) => Math.max(m, u.sort_order), 0);
+  const { data, error } = await sb.from('universities').insert({ name: name.trim(), sort_order: max + 10 }).select().single();
+  if(error) return SS.toast(SS.friendly(error));
+  await sb.rpc('admin_regenerate_code', { p_univ: data.id, p_role: 'member' });
+  await sb.rpc('admin_regenerate_code', { p_univ: data.id, p_role: 'reviewer' });
+  openU.add(data.id); SS.toast('追加しました'); loadUnis();
+};
+
+// ---------- ラベル ----------
+let LABELS = [];
+async function loadLabels(){
+  const { data } = await sb.from('labels').select('*').order('sort_order');
+  LABELS = data || [];
+  SS.$('#l-list').innerHTML = LABELS.map((l, i) => `<div class="lab" data-id="${l.id}">
+    <input type="color" value="${l.color}" data-c><input class="field" value="${SS.esc(l.name)}" maxlength="30" data-n>
+    <button data-lup="${i}" aria-label="上へ">↑</button><button data-lsave="${l.id}" aria-label="保存" style="color:var(--ok);">✓</button><button data-ldel="${l.id}" aria-label="削除" style="color:var(--ng);">✕</button></div>`).join('');
+}
+document.addEventListener('click', async ev => {
+  const t = ev.target;
+  const s = t.closest('[data-lsave]');
+  if(s){ const box = s.closest('.lab'); const { error } = await sb.from('labels').update({ name: box.querySelector('[data-n]').value.trim(), color: box.querySelector('[data-c]').value }).eq('id', +s.dataset.lsave); SS.toast(error ? SS.friendly(error) : '保存しました'); loadLabels(); return; }
+  const d = t.closest('[data-ldel]');
+  if(d){
+    if(!confirm('このラベルを削除しますか？資料からも外れます。')) return;
+    const id = +d.dataset.ldel;
+    const { data: ms } = await sb.from('materials').select('id,label_ids').contains('label_ids', [id]);
+    await Promise.all((ms || []).map(m => sb.from('materials').update({ label_ids: m.label_ids.filter(x => x !== id) }).eq('id', m.id)));
+    const { error } = await sb.from('labels').delete().eq('id', id); SS.toast(error ? SS.friendly(error) : '削除しました'); loadLabels(); return;
+  }
+  const u = t.closest('[data-lup]');
+  if(u){ const i = +u.dataset.lup; if(i === 0) return; const a = LABELS[i - 1], b = LABELS[i];
+    await Promise.all([sb.from('labels').update({ sort_order: (i + 1) * 10 }).eq('id', a.id), sb.from('labels').update({ sort_order: i * 10 }).eq('id', b.id)]); loadLabels(); }
+});
+SS.$('#nl-add').onclick = async () => {
+  const name = SS.$('#nl-name').value.trim(); if(!name) return;
+  const { error } = await sb.from('labels').insert({ name, color: SS.$('#nl-color').value, sort_order: (LABELS.length + 1) * 10 });
+  if(error) return SS.toast(SS.friendly(error));
+  SS.$('#nl-name').value = ''; loadLabels();
+};
+
+SS.boot({ adminOnly: true }).then(async () => {
+  await Promise.all([loadUnis(), loadLabels()]);
+  SS.reveal();
+});
+</script>
+</body>
+</html>

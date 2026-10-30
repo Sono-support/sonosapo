@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>アカウント | ソノサポ</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0C0C0C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" href="assets/favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="config.js"></script>
+<script src="common.js"></script>
+<style>
+.box{background:var(--dark);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px;}
+.box h2{font-size:14px;font-weight:800;margin-bottom:4px;}
+.box .hint{margin-top:2px;}
+.me{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+.me .av{width:52px;height:52px;border-radius:50%;background:var(--orange);color:var(--black);font-weight:900;font-size:21px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.me .nm{font-size:17px;font-weight:800;}
+.me .un{font-size:12px;color:var(--muted);}
+.kv{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:8px 0;border-top:1px solid var(--border);}
+.kv span:first-child{color:var(--muted);}
+.back{display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:700;color:var(--muted);text-decoration:none;border:1px solid var(--border);border-radius:999px;padding:5px 11px 5px 7px;}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <div><a class="back" href="index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>ホーム</a>
+  <div class="page-title" style="margin-top:10px;">アカウント</div></div>
+</div>
+
+<div class="wrap">
+  <!-- パスワード再設定（メールのリンクから来たとき） -->
+  <div class="box hidden" id="recover-box" style="border-color:rgba(255,147,5,.5);">
+    <h2>新しいパスワードを決める</h2>
+    <label class="label">新しいパスワード（8文字以上）</label>
+    <input class="field" type="password" id="rc-pass" autocomplete="new-password">
+    <div class="msg" id="rc-msg"></div>
+    <button class="btn" style="margin-top:12px;" id="rc-btn">保存する</button>
+  </div>
+
+  <div class="box">
+    <div class="me"><div class="av" id="av"></div><div><div class="nm" id="nm"></div><div class="un" id="un"></div></div></div>
+    <div class="kv"><span>大学</span><span id="kv-univ"></span></div>
+    <div class="kv"><span>役割</span><span id="kv-role"></span></div>
+  </div>
+
+  <div class="box">
+    <h2>プロフィール</h2>
+    <label class="label">名前</label>
+    <input class="field" id="p-name" maxlength="30">
+    <div id="p-year-wrap"><label class="label">学年</label><select class="field" id="p-year"></select></div>
+    <div class="hint">これから投稿するものに使われます（これまでの投稿の名前は変わりません）。</div>
+    <div class="msg" id="p-msg"></div>
+    <button class="btn" style="margin-top:12px;" id="p-save">保存する</button>
+  </div>
+
+  <div class="box hidden" id="group-box">
+    <h2>団体名（エコー部の名前）</h2>
+    <div class="hint">確認者（指導医）が、自分の大学の団体名を登録できます。ホームや「全国のエコー部」に表示されます。</div>
+    <input class="field" id="g-name" maxlength="40" placeholder="例：K-PICS" style="margin-top:10px;">
+    <div class="msg" id="g-msg"></div>
+    <button class="btn" style="margin-top:12px;" id="g-save">保存する</button>
+  </div>
+
+  <div class="box" id="email-box">
+    <h2>機種変更に備える（任意）</h2>
+    <div id="email-anon">
+      <div class="hint">いまは<b style="color:var(--text);">この端末だけ</b>でログインしている状態です。メールアドレスとパスワードを登録しておくと、機種変更しても同じアカウントで使えます。</div>
+      <label class="label">メールアドレス</label>
+      <input class="field" type="email" id="em" autocomplete="email">
+      <div class="msg" id="em-msg"></div>
+      <button class="btn ghost orange" style="margin-top:12px;" id="em-btn">確認メールを送る</button>
+    </div>
+    <div id="email-set" class="hidden">
+      <div class="kv" style="border-top:none;"><span>メールアドレス</span><span id="em-now"></span></div>
+      <label class="label">パスワードを設定・変更（8文字以上）</label>
+      <input class="field" type="password" id="pw" autocomplete="new-password">
+      <div class="msg" id="pw-msg"></div>
+      <button class="btn ghost orange" style="margin-top:12px;" id="pw-btn">パスワードを保存</button>
+      <div class="hint">新しい端末では、最初の画面の「メールアドレスでログイン」から入れます。</div>
+    </div>
+  </div>
+
+  <a class="row-link hidden" id="admin-link" href="admin.html"><div class="row-ic">⚙️</div><div class="row-body"><div class="row-title">管理画面</div><div class="row-desc">大学・招待コード・ラベル</div></div></a>
+
+  <div class="box">
+    <h2>ログアウト</h2>
+    <div class="hint" id="logout-hint"></div>
+    <button class="btn danger" style="margin-top:12px;" id="logout">ログアウトする</button>
+  </div>
+  <div class="hint" style="text-align:center;margin-bottom:20px;" id="ver"></div>
+</div>
+
+<script>
+function fill(){
+  const me = SS.me;
+  SS.$('#av').textContent = (me.name || '?').slice(0, 1);
+  SS.$('#nm').textContent = me.name || '';
+  SS.$('#un').textContent = SS.univLabel();
+  SS.$('#kv-univ').textContent = SS.univ ? SS.univ.name : '—';
+  SS.$('#kv-role').textContent = SS.ROLE_LABEL[me.role] + (me.role === 'member' && me.year ? '（' + SS.yearLabel(me.year) + '）' : '');
+  SS.$('#p-name').value = me.name || '';
+  SS.$('#p-year').innerHTML = '<option value="">—</option>' + SS.YEARS.map(([v, l]) => `<option value="${v}"${me.year === v ? ' selected' : ''}>${l}</option>`).join('');
+  SS.$('#p-year-wrap').classList.toggle('hidden', me.role !== 'member');
+  SS.$('#group-box').classList.toggle('hidden', !(SS.univ && SS.isStaff()));
+  if(SS.univ) SS.$('#g-name').value = SS.univ.group_name || '';
+  SS.$('#admin-link').classList.toggle('hidden', !SS.isAdmin());
+  const anon = SS.user.is_anonymous && !SS.user.email;
+  SS.$('#email-anon').classList.toggle('hidden', !anon);
+  SS.$('#email-set').classList.toggle('hidden', anon);
+  SS.$('#em-now').textContent = SS.user.email || SS.user.new_email || '';
+  if(anon && SS.user.new_email) SS.msg('em-msg', SS.user.new_email + ' に確認メールを送っています。メールのリンクを開いたあと、このページでパスワードを決めてください。', 'info');
+  SS.$('#logout-hint').innerHTML = anon
+    ? '<b style="color:#FF8A8A;">注意：</b>メールアドレスを登録していないので、ログアウトすると<b style="color:var(--text);">このアカウントには二度と戻れません</b>。もう一度使うには招待コードが必要で、別のアカウントになります。'
+    : 'ログアウトしたあとは、メールアドレスとパスワードでログインし直せます。';
+  SS.$('#ver').textContent = 'ソノサポ ' + SS_CONFIG.APP_VERSION;
+}
+
+SS.$('#p-save').onclick = async () => {
+  const name = SS.$('#p-name').value.trim(); if(!name){ SS.msg('p-msg', '名前を入力してください。'); return; }
+  const row = { name }; if(SS.me.role === 'member') row.year = parseInt(SS.$('#p-year').value, 10) || null;
+  const { error } = await sb.from('profiles').update(row).eq('id', SS.user.id);
+  if(error){ SS.msg('p-msg', SS.friendly(error)); return; }
+  Object.assign(SS.me, row); fill(); SS.msg('p-msg', '保存しました。', 'ok');
+};
+SS.$('#g-save').onclick = async () => {
+  const g = SS.$('#g-name').value.trim() || null;
+  const { data, error } = await sb.from('universities').update({ group_name: g }).eq('id', SS.univ.id).select();
+  if(error || !data || !data.length){ SS.msg('g-msg', error ? SS.friendly(error) : '保存できませんでした（権限がありません）。'); return; }
+  SS.univ.group_name = g; fill(); SS.msg('g-msg', '保存しました。', 'ok');
+};
+SS.$('#em-btn').onclick = async () => {
+  const email = SS.$('#em').value.trim(); if(!email){ SS.msg('em-msg', 'メールアドレスを入力してください。'); return; }
+  const { error } = await sb.auth.updateUser({ email }, { emailRedirectTo: new URL('account.html', location.href).href });
+  if(error){ SS.msg('em-msg', SS.friendly(error)); return; }
+  SS.msg('em-msg', '確認メールを送りました。メールのリンクを開いたら、このページに戻ってパスワードを決めてください（迷惑メールフォルダも確認を）。', 'ok');
+};
+SS.$('#pw-btn').onclick = async () => {
+  const password = SS.$('#pw').value; if(password.length < 8){ SS.msg('pw-msg', '8文字以上にしてください。'); return; }
+  const { error } = await sb.auth.updateUser({ password });
+  if(error){ SS.msg('pw-msg', SS.friendly(error)); return; }
+  SS.$('#pw').value = ''; SS.msg('pw-msg', 'パスワードを保存しました。', 'ok');
+};
+SS.$('#rc-btn').onclick = async () => {
+  const password = SS.$('#rc-pass').value; if(password.length < 8){ SS.msg('rc-msg', '8文字以上にしてください。'); return; }
+  const { error } = await sb.auth.updateUser({ password });
+  if(error){ SS.msg('rc-msg', SS.friendly(error)); return; }
+  SS.msg('rc-msg', '新しいパスワードを保存しました。', 'ok');
+};
+SS.$('#logout').onclick = async () => {
+  const anon = SS.user.is_anonymous && !SS.user.email;
+  if(!confirm(anon ? 'メールアドレス未登録のため、ログアウトするとこのアカウントに戻れなくなります。本当にログアウトしますか？' : 'ログアウトしますか？')) return;
+  await sb.auth.signOut();
+  location.replace('index.html');
+};
+
+SS.boot().then(() => {
+  fill(); SS.tabbar('home');
+  if(/type=recovery/.test(SS_INITIAL_HASH)) SS.$('#recover-box').classList.remove('hidden');
+  sb.auth.onAuthStateChange(ev => { if(ev === 'PASSWORD_RECOVERY') SS.$('#recover-box').classList.remove('hidden'); });
+  SS.reveal();
+});
+</script>
+</body>
+</html>

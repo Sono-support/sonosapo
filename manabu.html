@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>まなぶ | ソノサポ</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0C0C0C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" href="assets/favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="config.js"></script>
+<script src="common.js"></script>
+<style>
+.top{background:linear-gradient(to bottom, rgba(255,147,5,.14), rgba(255,147,5,.03));}
+.top .page-head{padding-top:16px;}
+body.adv .top{background:linear-gradient(to bottom, rgba(90,167,232,.16), rgba(90,167,232,.03));}
+.top-title{font-family:"Bebas Neue",sans-serif;font-size:40px;letter-spacing:.04em;line-height:1;}
+.top-title .hl{color:var(--orange);}
+body.adv .top-title .hl{color:var(--blue);}
+.top-actions{display:flex;gap:8px;align-items:center;}
+.flip-btn{height:42px;padding:0 14px 0 11px;border-radius:13px;background:rgba(255,255,255,.04);border:1px solid var(--border-light);display:flex;align-items:center;gap:7px;color:var(--orange-light);font-size:12.5px;font-weight:800;}
+body.adv .flip-btn{color:var(--blue);border-color:rgba(90,167,232,.4);}
+.edit-btn{white-space:nowrap;height:42px;padding:0 12px;border-radius:13px;background:transparent;border:1px dashed var(--border-light);color:var(--muted);font-size:12px;font-weight:700;}
+.edit-btn.on{border-style:solid;border-color:var(--orange);color:var(--orange);background:var(--orange-bg);}
+
+/* ラベルの帯 */
+.labelbar{position:sticky;top:0;z-index:60;background:rgba(12,12,12,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding-top:env(safe-area-inset-top);}
+.labelbar-in{max-width:680px;margin:0 auto;padding:9px 16px;display:flex;align-items:center;gap:8px;}
+.labelbar-k{font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap;flex-shrink:0;}
+.lb-chip{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:11.5px;font-weight:700;border-radius:999px;padding:6px 11px;border:1px solid var(--border-light);background:var(--card);color:var(--text);}
+.lb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.lb-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;border-radius:999px;padding:1px 7px;border:1px solid;white-space:nowrap;line-height:1.6;}
+
+/* 表裏 */
+.stage{backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+.face{max-width:680px;margin:0 auto;padding:6px 16px 20px;}
+.intro{font-size:12.5px;color:var(--muted);line-height:1.8;margin:14px 2px 16px;}
+.sec-h{margin:28px 2px 12px;}
+.sec-h .k{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.22em;color:var(--blue);}
+.sec-h .t{font-size:22px;font-weight:900;margin-top:2px;}
+
+/* BASIC：番号つきの幹 */
+.trunk{position:relative;padding-left:46px;}
+.trunk::before{content:"";position:absolute;left:17px;top:14px;bottom:10px;width:1px;background:linear-gradient(to bottom,var(--orange),rgba(255,147,5,.3) 70%,transparent);}
+.node{position:relative;margin-bottom:10px;}
+.node::before{content:attr(data-n);position:absolute;left:-46px;top:12px;width:35px;height:35px;border-radius:50%;background:var(--black);border:1px solid rgba(255,147,5,.55);box-shadow:0 0 0 5px var(--black);display:flex;align-items:center;justify-content:center;font-family:"Bebas Neue",sans-serif;font-size:16px;color:var(--orange);}
+.node.open::before{background:var(--orange);color:var(--black);}
+
+/* アコーディオン */
+.acc{background:linear-gradient(180deg,#1C1C1C,#171717);border:1px solid var(--border);border-radius:16px;overflow:hidden;scroll-margin-top:70px;}
+.acc.open{border-color:rgba(255,147,5,.45);}
+body.adv .acc.open{border-color:rgba(90,167,232,.5);}
+.acc-head{display:flex;align-items:center;gap:12px;padding:14px 14px;cursor:pointer;user-select:none;}
+.acc-title{font-size:15px;font-weight:800;line-height:1.4;}
+.acc-meta{display:flex;gap:8px;align-items:center;margin-top:3px;font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.1em;color:var(--dim);flex-wrap:wrap;}
+.acc-meta .cnt{color:var(--orange);letter-spacing:.02em;}
+body.adv .acc-meta .cnt{color:var(--blue);}
+.acc-arrow{margin-left:auto;flex-shrink:0;color:var(--dim);transition:transform .28s var(--ease);}
+.acc.open .acc-arrow{transform:rotate(180deg);color:var(--orange);}
+.acc-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s var(--ease);}
+.acc.open .acc-wrap{grid-template-rows:1fr;}
+.acc-body{min-height:0;overflow:hidden;}
+.acc-inner{padding:0 14px 14px;}
+.acc-desc{font-size:12.5px;color:var(--muted);line-height:1.9;margin-bottom:10px;white-space:pre-wrap;}
+
+/* 資料 */
+.mat{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.32);border:1px solid var(--border);border-radius:12px;padding:10px 11px;margin-top:7px;cursor:pointer;}
+.mat:active{border-color:var(--orange);}
+.mat-ic{width:34px;height:34px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font:700 9.5px "JetBrains Mono",monospace;}
+.mat-ic.pdf{background:rgba(240,96,96,.12);border:1px solid rgba(240,96,96,.35);color:#F38B8B;}
+.mat-ic.image{background:rgba(108,197,138,.12);border:1px solid rgba(108,197,138,.35);color:var(--ok);}
+.mat-ic.link{background:rgba(90,167,232,.12);border:1px solid rgba(90,167,232,.35);color:var(--blue);}
+.mat-body{flex:1;min-width:0;}
+.mat-title{font-size:13px;font-weight:700;line-height:1.45;word-break:break-word;}
+.mat-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
+.mat-meta{font-size:10px;color:var(--dim);font-family:"JetBrains Mono",monospace;margin-top:3px;}
+.mat-note{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.6;}
+.no-mat{font-size:11.5px;color:var(--dim);padding:6px 2px;}
+
+/* 小項目 */
+.sub{border:1px solid var(--border);border-radius:12px;margin-top:8px;background:rgba(0,0,0,.2);}
+.sub-head{display:flex;align-items:center;gap:10px;padding:11px 12px;cursor:pointer;}
+.sub-idx{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--dim);width:18px;flex-shrink:0;}
+.sub-name{flex:1;min-width:0;font-size:13.5px;font-weight:700;}
+.sub-name small{display:block;font-size:10.5px;font-weight:400;color:var(--muted);}
+.sub-cnt{font:600 10px "JetBrains Mono",monospace;border-radius:999px;padding:1px 8px;background:var(--border-light);color:var(--muted);}
+.sub-cnt.has{background:var(--orange);color:var(--black);}
+body.adv .sub-cnt.has{background:var(--blue);}
+.sub-list{display:none;padding:0 10px 10px;}
+.sub.open .sub-list{display:block;}
+
+.ask-link{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:12px;font-weight:700;color:var(--orange-light);text-decoration:none;border:1px solid rgba(255,147,5,.35);border-radius:10px;padding:8px 12px;}
+body.adv .ask-link{color:var(--blue);border-color:rgba(90,167,232,.4);}
+
+/* 編集モード（管理者） */
+.adm{display:none;gap:6px;flex-wrap:wrap;margin-top:10px;}
+body.editing .adm{display:flex;}
+.adm button{border:1px solid var(--border-light);background:var(--black);color:var(--muted);border-radius:8px;font-size:11.5px;font-weight:700;padding:6px 10px;}
+.adm button.add{border-style:dashed;border-color:rgba(255,147,5,.5);color:var(--orange-light);}
+.adm button.del{color:var(--ng);border-color:rgba(240,96,96,.4);}
+.mat-adm{display:none;gap:4px;flex-shrink:0;}
+body.editing .mat-adm{display:flex;}
+.mat-adm button{width:28px;height:28px;border-radius:7px;border:1px solid var(--border-light);background:var(--black);color:var(--muted);font-size:12px;}
+.add-sec{display:none;width:100%;margin-top:10px;padding:12px;border-radius:14px;border:1.5px dashed rgba(255,147,5,.45);background:transparent;color:var(--orange-light);font-weight:800;font-size:13px;}
+body.editing .add-sec{display:block;}
+
+/* 外部リンク */
+.ext-card{margin-top:22px;border-radius:18px;padding:18px 16px;border:1px solid rgba(90,167,232,.35);background:radial-gradient(110% 120% at 100% 0%, rgba(90,167,232,.16), transparent 60%), var(--card);}
+.ext-k{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--blue);}
+.ext-t{font-size:17px;font-weight:900;margin-top:4px;}
+.ext-d{font-size:12.5px;color:var(--muted);line-height:1.8;margin-top:6px;}
+.ext-a{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(0,0,0,.35);border:1px solid rgba(90,167,232,.4);color:#BFDDF7;font-weight:800;font-size:13px;text-decoration:none;}
+
+/* ラベル別一覧 */
+.lgroup{margin-bottom:14px;}
+.lgroup-h{font-size:11.5px;font-weight:800;color:var(--muted);margin:0 2px 2px;}
+
+/* 資料の追加フォーム */
+.lbl-pick{display:flex;flex-wrap:wrap;gap:6px;}
+.lbl-pick button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-light);background:var(--black);color:var(--muted);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:700;}
+.lbl-pick button.on{color:var(--text);}
+.drop{display:block;border:1.5px dashed var(--border-light);border-radius:12px;padding:18px;text-align:center;color:var(--muted);font-size:12.5px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="labelbar">
+  <div class="labelbar-in">
+    <span class="labelbar-k">ラベルで探す</span>
+    <div class="chips scroll" id="labelbar"></div>
+  </div>
+</div>
+
+<div class="stage" id="stage">
+  <div class="top">
+    <div class="page-head">
+      <div>
+        <div class="top-title" id="top-title"><span class="hl">BASIC</span></div>
+        <div class="page-sub" id="top-sub">まなぶ ー まずはここから</div>
+      </div>
+      <div class="top-actions">
+        <button type="button" class="edit-btn hidden" id="edit-btn">編集</button>
+        <button type="button" class="flip-btn" id="flip-btn">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+          <span id="flip-label">Advanced</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 表：BASIC -->
+  <div class="face" id="face-basic">
+    <p class="intro">はじめての人は、①から順番に。セミナーの予習・復習から認定試験まで、迷わず進めます。</p>
+    <div class="trunk" id="basic-list"><div class="loading">読み込み中</div></div>
+    <button class="add-sec" data-add-sec="basic|main">＋ BASIC に項目を追加</button>
+
+    <div class="ext-card">
+      <div class="ext-k">EXTERNAL LINK</div>
+      <div class="ext-t">とっても参考になる外部リンク</div>
+      <div class="ext-d">GEヘルスケアの「waza-ari」。腹部・心臓・血管・運動器などのPOCUS動画が、とても分かりやすくまとまっています。<b style="color:var(--text);">予習にも復習にも</b>どうぞ。</div>
+      <a class="ext-a" href="https://www.gehealthcare.co.jp/products/ultrasound/versana/echo-waza-ari/pocus" target="_blank" rel="noopener">waza-ari を見る<span class="mono" style="font-size:10px;opacity:.7;">外部 ↗</span></a>
+    </div>
+  </div>
+
+  <!-- 裏：Advanced -->
+  <div class="face" id="face-adv" hidden>
+    <p class="intro">ここから先は応用ルート。興味のある分野から、どこへでも。</p>
+    <div class="sec-h"><div class="k">BY FIELD</div><div class="t">分野別</div></div>
+    <div id="field-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <button class="add-sec" data-add-sec="advanced|field">＋ 分野を追加</button>
+    <div class="sec-h"><div class="k">OTHERS</div><div class="t">その他</div></div>
+    <div id="other-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <button class="add-sec" data-add-sec="advanced|other">＋ その他に追加</button>
+  </div>
+</div>
+
+<!-- ラベル別の資料一覧 -->
+<div class="sheet-overlay" id="sheet-label">
+  <div class="sheet">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><div><div class="sheet-title" id="lab-title"></div><div class="sheet-sub">このラベルがついた資料</div></div><button class="sheet-close" data-close="sheet-label">✕</button></div>
+    <div class="sheet-body" id="lab-body"></div>
+  </div>
+</div>
+
+<!-- 項目の追加・編集（管理者） -->
+<div class="sheet-overlay" id="sheet-sec" data-sticky="1">
+  <div class="sheet">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><div class="sheet-title" id="sec-form-title">項目</div><button class="sheet-close" data-close="sheet-sec">✕</button></div>
+    <div class="sheet-body">
+      <label class="label" style="margin-top:0;">名前 <span class="req">*</span></label>
+      <input class="field" id="sf-title" maxlength="40">
+      <label class="label">英字の小見出し（なくてもOK）</label>
+      <input class="field" id="sf-sub" maxlength="30" placeholder="例：NECK">
+      <label class="label">説明（なくてもOK）</label>
+      <textarea class="field" id="sf-desc" maxlength="600"></textarea>
+      <div class="msg" id="sf-msg"></div>
+      <button class="btn block" style="margin-top:14px;" id="sf-save">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 資料の追加・編集（管理者） -->
+<div class="sheet-overlay" id="sheet-mat" data-sticky="1">
+  <div class="sheet">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><div><div class="sheet-title" id="mf-title-h">資料を追加</div><div class="sheet-sub" id="mf-where"></div></div><button class="sheet-close" data-close="sheet-mat">✕</button></div>
+    <div class="sheet-body">
+      <div class="seg" id="mf-kind"><button type="button" data-k="file" class="on">ファイル（PDF・画像）</button><button type="button" data-k="link">リンク</button></div>
+      <div id="mf-file-wrap">
+        <label class="label">ファイル <span class="req">*</span></label>
+        <label class="drop" for="mf-file" id="mf-drop">タップしてPDFか画像を選ぶ<br><span style="font-size:11px;color:var(--dim);">1ファイル50MBまで</span></label>
+        <input type="file" class="file-hidden" id="mf-file" accept="application/pdf,.pdf,image/jpeg,image/png,image/webp">
+      </div>
+      <div id="mf-link-wrap" class="hidden">
+        <label class="label">URL <span class="req">*</span></label>
+        <input class="field" id="mf-url" type="url" placeholder="https://">
+      </div>
+      <label class="label">資料の名前 <span class="req">*</span></label>
+      <input class="field" id="mf-title" maxlength="80">
+      <label class="label">ラベル</label>
+      <div class="lbl-pick" id="mf-labels"></div>
+      <label class="label">ひとこと（なくてもOK）</label>
+      <input class="field" id="mf-note" maxlength="120" placeholder="例：2026年度版。動画つき">
+      <div class="msg" id="mf-msg"></div>
+      <button class="btn block" style="margin-top:14px;" id="mf-save">保存する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// まなぶ：項目・資料はすべて Supabase から読み込む
+//   sections  … BASIC の 1〜7、Advanced の分野・その他、その下の小項目
+//   materials … 各項目の資料（PDF・画像・リンク）。label_ids でラベルを持つ
+//   labels    … 「指導医監修」などのラベル
+// 管理者は右上の「編集」で、項目・資料の追加／並べ替え／削除ができる。
+// ================================================================
+let SECS = [], MATS = [], LABELS = [];
+const openIds = new Set();
+let side = 'basic';
+const LABEL_BY_ID = () => Object.fromEntries(LABELS.map(l => [l.id, l]));
+
+const ICON_CHEV = '<svg class="acc-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+
+async function loadAll(){
+  const [s, m, l] = await Promise.all([
+    sb.from('sections').select('*').order('sort_order').order('created_at'),
+    sb.from('materials').select('*').order('sort_order').order('created_at'),
+    sb.from('labels').select('*').order('sort_order'),
+  ]);
+  if(s.error){ SS.$('#basic-list').innerHTML = '<div class="empty">読み込めませんでした。<br>' + SS.esc(SS.friendly(s.error)) + '</div>'; return; }
+  SECS = s.data || []; MATS = m.data || []; LABELS = l.data || [];
+  render();
+}
+const kids = id => SECS.filter(x => x.parent_id === id);
+const matsOf = id => MATS.filter(x => x.section_id === id);
+const countDeep = id => matsOf(id).length + kids(id).reduce((n, k) => n + countDeep(k.id), 0);
+
+function labelTag(l){ return `<span class="lb-tag" style="color:${l.color};border-color:${l.color}66;background:${l.color}14;">${SS.esc(l.name)}</span>`; }
+
+function matHtml(m){
+  const lb = LABEL_BY_ID();
+  const tags = (m.label_ids || []).map(id => lb[id]).filter(Boolean).map(labelTag).join('');
+  const ic = m.kind === 'link' ? 'LINK' : m.kind === 'image' ? 'IMG' : 'PDF';
+  const meta = m.kind === 'link' ? '外部リンク ↗' : [SS.fmtDate(m.created_at), SS.fmtSize(m.size_bytes)].filter(Boolean).join(' ・ ');
+  return `<div class="mat" data-mat="${m.id}" role="button" tabindex="0">
+    <div class="mat-ic ${m.kind}">${ic}</div>
+    <div class="mat-body">
+      <div class="mat-title">${SS.esc(m.title)}</div>
+      ${tags ? `<div class="mat-tags">${tags}</div>` : ''}
+      ${m.note ? `<div class="mat-note">${SS.esc(m.note)}</div>` : ''}
+      <div class="mat-meta">${SS.esc(meta)}</div>
+    </div>
+    <div class="mat-adm"><button data-mup="${m.id}" aria-label="上へ">↑</button><button data-medit="${m.id}" aria-label="編集">✎</button><button data-mdel="${m.id}" aria-label="削除">✕</button></div>
+  </div>`;
+}
+function matsHtml(id){
+  const ms = matsOf(id);
+  return ms.length ? ms.map(matHtml).join('') : '<div class="no-mat">資料は準備中です。</div>';
+}
+function admHtml(sec, isSub){
+  return `<div class="adm">
+    <button class="add" data-addmat="${sec.id}">＋ 資料</button>
+    ${isSub ? '' : `<button class="add" data-addsub="${sec.id}">＋ 小項目</button>`}
+    <button data-edit="${sec.id}">✎ 名前・説明</button>
+    <button data-up="${sec.id}">↑</button><button data-down="${sec.id}">↓</button>
+    <button class="del" data-del="${sec.id}">削除</button></div>`;
+}
+function subHtml(k, i){
+  const n = countDeep(k.id);
+  return `<div class="sub${openIds.has(k.id) ? ' open' : ''}" id="sec-${k.id}">
+    <div class="sub-head" data-toggle-sub="${k.id}">
+      <span class="sub-idx">${SS.pad(i + 1)}</span>
+      <div class="sub-name">${SS.esc(k.title)}${k.subtitle ? `<small>${SS.esc(k.subtitle)}</small>` : ''}</div>
+      <span class="sub-cnt${n ? ' has' : ''}">${n}</span>
+    </div>
+    <div class="sub-list">${k.description ? `<div class="acc-desc">${SS.esc(k.description)}</div>` : ''}${matsHtml(k.id)}${admHtml(k, true)}</div>
+  </div>`;
+}
+function accHtml(sec){
+  const n = countDeep(sec.id), ks = kids(sec.id);
+  return `<div class="acc${openIds.has(sec.id) ? ' open' : ''}" id="sec-${sec.id}">
+    <div class="acc-head" data-toggle="${sec.id}">
+      <div style="flex:1;min-width:0;">
+        <div class="acc-title">${SS.esc(sec.title)}</div>
+        <div class="acc-meta">${sec.subtitle ? `<span>${SS.esc(sec.subtitle)}</span>` : ''}${ks.length ? `<span>${ks.length} TOPICS</span>` : ''}${n ? `<span class="cnt">資料 ${n}</span>` : ''}</div>
+      </div>${ICON_CHEV}
+    </div>
+    <div class="acc-wrap"><div class="acc-body"><div class="acc-inner">
+      ${sec.description ? `<div class="acc-desc">${SS.esc(sec.description)}</div>` : ''}
+      ${matsOf(sec.id).map(matHtml).join('')}
+      ${ks.map(subHtml).join('')}
+      ${!ks.length && !matsOf(sec.id).length ? '<div class="no-mat">資料は準備中です。</div>' : ''}
+      <a class="ask-link" href="chat.html?new=1&section=${sec.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>このテーマで質問する</a>
+      ${admHtml(sec, false)}
+    </div></div></div>
+  </div>`;
+}
+function render(){
+  const tops = (s, g) => SECS.filter(x => !x.parent_id && x.side === s && x.grp === g);
+  const basics = tops('basic', 'main');
+  SS.$('#basic-list').innerHTML = basics.length
+    ? basics.map((s, i) => `<div class="node${openIds.has(s.id) ? ' open' : ''}" data-n="${SS.pad(i + 1)}">${accHtml(s)}</div>`).join('')
+    : '<div class="empty">項目がまだありません</div>';
+  SS.$('#field-list').innerHTML = tops('advanced', 'field').map(accHtml).join('') || '<div class="empty">まだありません</div>';
+  SS.$('#other-list').innerHTML = tops('advanced', 'other').map(accHtml).join('') || '<div class="empty">まだありません</div>';
+  // ラベルの帯
+  SS.$('#labelbar').innerHTML = LABELS.map(l => {
+    const n = MATS.filter(m => (m.label_ids || []).includes(l.id)).length;
+    return `<button type="button" class="lb-chip" data-label="${l.id}"><span class="lb-dot" style="background:${l.color}"></span>${SS.esc(l.name)}<span class="mono" style="color:var(--dim);font-size:10px;">${n}</span></button>`;
+  }).join('');
+}
+
+// ---------- 開く・閉じる ----------
+document.addEventListener('click', async (ev) => {
+  const t = ev.target;
+  const tog = t.closest('[data-toggle]');
+  if(tog){
+    const id = tog.dataset.toggle, acc = tog.closest('.acc');
+    const on = !acc.classList.contains('open');
+    acc.classList.toggle('open', on); on ? openIds.add(id) : openIds.delete(id);
+    const node = acc.closest('.node'); if(node) node.classList.toggle('open', on);
+    return;
+  }
+  const ts = t.closest('[data-toggle-sub]');
+  if(ts){ const s = ts.closest('.sub'); const on = !s.classList.contains('open'); s.classList.toggle('open', on); on ? openIds.add(ts.dataset.toggleSub) : openIds.delete(ts.dataset.toggleSub); return; }
+
+  // 管理者の操作
+  if(t.closest('.mat-adm button')){
+    ev.stopPropagation();
+    const b = t.closest('button');
+    if(b.dataset.medit) return openMatForm(MATS.find(m => m.id === b.dataset.medit));
+    if(b.dataset.mdel) return delMat(b.dataset.mdel);
+    if(b.dataset.mup) return moveMat(b.dataset.mup);
+  }
+  const mat = t.closest('[data-mat]');
+  if(mat) return openMat(MATS.find(m => m.id === mat.dataset.mat));
+
+  const lab = t.closest('[data-label]');
+  if(lab) return openLabel(+lab.dataset.label);
+
+  const b = t.closest('.adm button, .add-sec');
+  if(!b) return;
+  if(b.dataset.addSec){ const [s, g] = b.dataset.addSec.split('|'); return openSecForm(null, { side: s, grp: g, parent_id: null }); }
+  if(b.dataset.addsub){ const p = SECS.find(x => x.id === b.dataset.addsub); return openSecForm(null, { side: p.side, grp: p.grp, parent_id: p.id }); }
+  if(b.dataset.addmat) return openMatForm(null, b.dataset.addmat);
+  if(b.dataset.edit) return openSecForm(SECS.find(x => x.id === b.dataset.edit));
+  if(b.dataset.up) return moveSec(b.dataset.up, -1);
+  if(b.dataset.down) return moveSec(b.dataset.down, 1);
+  if(b.dataset.del) return delSec(b.dataset.del);
+});
+
+// ---------- 資料を開く ----------
+async function openMat(m){
+  if(!m) return;
+  if(m.kind === 'link'){ window.open(m.url, '_blank', 'noopener'); return; }
+  const w = window.open('', '_blank');   // iPhoneでポップアップ扱いされないよう、先に窓だけ開く
+  const { data, error } = await sb.storage.from('materials').createSignedUrl(m.storage_path, 3600);
+  if(error || !data){ if(w) w.close(); SS.toast('資料を開けませんでした'); return; }
+  if(w) w.location.href = data.signedUrl; else location.href = data.signedUrl;
+}
+
+// ---------- ラベル別 ----------
+function pathOf(secId){
+  const s = SECS.find(x => x.id === secId); if(!s) return '';
+  const p = s.parent_id ? SECS.find(x => x.id === s.parent_id) : null;
+  const sideName = s.side === 'basic' ? 'BASIC' : (s.grp === 'other' ? 'その他' : 'Advanced');
+  return [sideName, p && p.title, s.title].filter(Boolean).join(' ＞ ');
+}
+function openLabel(id){
+  const l = LABELS.find(x => x.id === id); if(!l) return;
+  SS.$('#lab-title').innerHTML = `<span class="lb-dot" style="display:inline-block;background:${l.color};margin-right:8px;vertical-align:1px;"></span>${SS.esc(l.name)}`;
+  const ms = MATS.filter(m => (m.label_ids || []).includes(id));
+  const groups = {};
+  ms.forEach(m => { const k = pathOf(m.section_id); (groups[k] = groups[k] || []).push(m); });
+  SS.$('#lab-body').innerHTML = ms.length
+    ? Object.keys(groups).map(k => `<div class="lgroup"><div class="lgroup-h">${SS.esc(k)}</div>${groups[k].map(matHtml).join('')}</div>`).join('')
+    : '<div class="empty">このラベルの資料はまだありません</div>';
+  SS.openSheet('sheet-label');
+  try{ history.replaceState(null, '', '#label-' + id); }catch(e){}
+}
+
+// ================================================================
+// 管理者：項目
+// ================================================================
+let secEditing = null, secDraft = null;
+function openSecForm(sec, draft){
+  secEditing = sec; secDraft = draft || null;
+  SS.$('#sec-form-title').textContent = sec ? '項目を編集' : (draft.parent_id ? '小項目を追加' : '項目を追加');
+  SS.$('#sf-title').value = sec ? sec.title : '';
+  SS.$('#sf-sub').value = sec ? (sec.subtitle || '') : '';
+  SS.$('#sf-desc').value = sec ? (sec.description || '') : '';
+  SS.msg('sf-msg'); SS.openSheet('sheet-sec');
+}
+SS.$('#sf-save').onclick = async () => {
+  const title = SS.$('#sf-title').value.trim();
+  if(!title){ SS.msg('sf-msg', '名前を入力してください。'); return; }
+  const row = { title, subtitle: SS.$('#sf-sub').value.trim() || null, description: SS.$('#sf-desc').value.trim() || null };
+  let r;
+  if(secEditing) r = await sb.from('sections').update(row).eq('id', secEditing.id);
+  else{
+    const sibs = SECS.filter(x => x.parent_id === secDraft.parent_id && x.side === secDraft.side && x.grp === secDraft.grp);
+    r = await sb.from('sections').insert({ ...row, ...secDraft, sort_order: (sibs.reduce((m, x) => Math.max(m, x.sort_order), 0) + 10) });
+    if(secDraft.parent_id) openIds.add(secDraft.parent_id);
+  }
+  if(r.error){ SS.msg('sf-msg', SS.friendly(r.error)); return; }
+  SS.closeSheet('sheet-sec'); SS.toast('保存しました'); loadAll();
+};
+async function renumber(list, table){
+  // 並び順を 10, 20, 30… に振り直して保存
+  await Promise.all(list.map((x, i) => (x.sort_order !== (i + 1) * 10) ? sb.from(table).update({ sort_order: (i + 1) * 10 }).eq('id', x.id) : null).filter(Boolean));
+}
+async function moveSec(id, dir){
+  const s = SECS.find(x => x.id === id);
+  const sibs = SECS.filter(x => x.parent_id === s.parent_id && x.side === s.side && x.grp === s.grp);
+  const i = sibs.indexOf(s), j = i + dir;
+  if(j < 0 || j >= sibs.length) return;
+  [sibs[i], sibs[j]] = [sibs[j], sibs[i]];
+  await renumber(sibs, 'sections'); loadAll();
+}
+async function delSec(id){
+  const s = SECS.find(x => x.id === id);
+  const n = countDeep(id);
+  if(!confirm(`「${s.title}」を削除します。` + (n ? `\nこの中の資料 ${n} 件も消えます。` : '') + (kids(id).length ? '\n小項目もすべて消えます。' : '') + '\nよろしいですか？')) return;
+  // 先にファイルを片づける
+  const all = []; (function walk(x){ all.push(x); kids(x).forEach(k => walk(k.id)); })(id);
+  const paths = MATS.filter(m => all.includes(m.section_id) && m.storage_path).map(m => m.storage_path);
+  if(paths.length) await sb.storage.from('materials').remove(paths);
+  const { error } = await sb.from('sections').delete().eq('id', id);
+  if(error){ SS.toast(SS.friendly(error)); return; }
+  SS.toast('削除しました'); loadAll();
+}
+
+// ================================================================
+// 管理者：資料
+// ================================================================
+let matEditing = null, matSection = null, matKind = 'file', matFile = null, matLabels = new Set();
+function drawLabelPick(){
+  SS.$('#mf-labels').innerHTML = LABELS.map(l => {
+    const on = matLabels.has(l.id);
+    return `<button type="button" data-l="${l.id}" class="${on ? 'on' : ''}" style="${on ? `border-color:${l.color};background:${l.color}22;` : ''}"><span class="lb-dot" style="background:${l.color}"></span>${SS.esc(l.name)}</button>`;
+  }).join('') || '<span class="hint">ラベルは管理画面で作れます</span>';
+  SS.$$('#mf-labels button').forEach(b => b.onclick = () => { const id = +b.dataset.l; matLabels.has(id) ? matLabels.delete(id) : matLabels.add(id); drawLabelPick(); });
+}
+function setKind(k){
+  matKind = k;
+  SS.$$('#mf-kind button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  SS.$('#mf-file-wrap').classList.toggle('hidden', k !== 'file');
+  SS.$('#mf-link-wrap').classList.toggle('hidden', k !== 'link');
+}
+SS.$$('#mf-kind button').forEach(b => b.onclick = () => { if(!matEditing) setKind(b.dataset.k); });
+function openMatForm(m, sectionId){
+  matEditing = m || null; matSection = m ? m.section_id : sectionId; matFile = null;
+  matLabels = new Set(m ? (m.label_ids || []) : []);
+  SS.$('#mf-title-h').textContent = m ? '資料を編集' : '資料を追加';
+  SS.$('#mf-where').textContent = pathOf(matSection);
+  SS.$('#mf-title').value = m ? m.title : '';
+  SS.$('#mf-url').value = m && m.kind === 'link' ? m.url : '';
+  SS.$('#mf-note').value = m ? (m.note || '') : '';
+  SS.$('#mf-drop').innerHTML = 'タップしてPDFか画像を選ぶ<br><span style="font-size:11px;color:var(--dim);">1ファイル50MBまで</span>';
+  setKind(m ? (m.kind === 'link' ? 'link' : 'file') : 'file');
+  // 編集のときはファイルの差し替えはしない（消して入れ直す）
+  SS.$('#mf-kind').classList.toggle('hidden', !!m);
+  SS.$('#mf-file-wrap').classList.toggle('hidden', !!m || matKind !== 'file');
+  SS.$('#mf-link-wrap').classList.toggle('hidden', matKind !== 'link');
+  drawLabelPick(); SS.msg('mf-msg'); SS.openSheet('sheet-mat');
+}
+SS.$('#mf-file').addEventListener('change', () => {
+  const f = SS.$('#mf-file').files[0]; if(!f) return;
+  matFile = f;
+  SS.$('#mf-drop').innerHTML = `<b style="color:var(--text);">${SS.esc(f.name)}</b><br><span style="font-size:11px;">${SS.fmtSize(f.size)}</span>`;
+  if(!SS.$('#mf-title').value.trim()) SS.$('#mf-title').value = f.name.replace(/\.[^.]+$/, '');
+});
+SS.$('#mf-save').onclick = async () => {
+  const btn = SS.$('#mf-save'), title = SS.$('#mf-title').value.trim();
+  const base = { title, label_ids: [...matLabels], note: SS.$('#mf-note').value.trim() || null };
+  if(!title){ SS.msg('mf-msg', '資料の名前を入力してください。'); return; }
+  btn.disabled = true; SS.msg('mf-msg', '保存しています…', 'info');
+  try{
+    if(matEditing){
+      if(matEditing.kind === 'link'){
+        base.url = SS.$('#mf-url').value.trim();
+        if(!/^https?:\/\//.test(base.url)) throw new Error('URL は http から始まる形で入力してください。');
+      }
+      const { error } = await sb.from('materials').update(base).eq('id', matEditing.id); if(error) throw error;
+    } else if(matKind === 'link'){
+      const url = SS.$('#mf-url').value.trim();
+      if(!/^https?:\/\//.test(url)) throw new Error('URL は http から始まる形で入力してください。');
+      const { error } = await sb.from('materials').insert({ ...base, section_id: matSection, kind: 'link', url, sort_order: nextMatOrder() });
+      if(error) throw error;
+    } else {
+      const f = matFile;
+      if(!f) throw new Error('ファイルを選んでください。');
+      const isPdf = /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name);
+      const isImg = /^image\/(jpeg|png|webp)$/.test(f.type);
+      if(!isPdf && !isImg) throw new Error('PDF か画像（JPEG・PNG・WebP）を選んでください。');
+      if(f.size > 50 * 1048576) throw new Error('50MBまでのファイルにしてください。');
+      const buf = await f.arrayBuffer();   // iPhone対策：先に中身を読み切る
+      if(!buf.byteLength) throw new Error('ファイルの中身が空でした。iCloudなどにだけある場合は、一度端末にダウンロードしてください。');
+      const ext = isPdf ? 'pdf' : f.type.split('/')[1].replace('jpeg', 'jpg');
+      const path = matSection + '/' + SS.randName(ext);
+      SS.msg('mf-msg', 'アップロード中…（' + SS.fmtSize(f.size) + '）', 'info');
+      const up = await sb.storage.from('materials').upload(path, new Blob([buf], { type: isPdf ? 'application/pdf' : f.type }), { upsert: false });
+      if(up.error) throw up.error;
+      const { error } = await sb.from('materials').insert({ ...base, section_id: matSection, kind: isPdf ? 'pdf' : 'image', storage_path: path, size_bytes: f.size, sort_order: nextMatOrder() });
+      if(error){ await sb.storage.from('materials').remove([path]); throw error; }
+    }
+    openIds.add(matSection);
+    const s = SECS.find(x => x.id === matSection); if(s && s.parent_id) openIds.add(s.parent_id);
+    SS.closeSheet('sheet-mat'); SS.toast('保存しました'); SS.$('#mf-file').value = ''; loadAll();
+  }catch(e){ SS.msg('mf-msg', SS.friendly(e)); }
+  finally{ btn.disabled = false; }
+};
+const nextMatOrder = () => matsOf(matSection).reduce((m, x) => Math.max(m, x.sort_order), 0) + 10;
+async function delMat(id){
+  const m = MATS.find(x => x.id === id);
+  if(!confirm(`「${m.title}」を削除しますか？`)) return;
+  if(m.storage_path) await sb.storage.from('materials').remove([m.storage_path]);
+  const { error } = await sb.from('materials').delete().eq('id', id);
+  if(error){ SS.toast(SS.friendly(error)); return; }
+  SS.toast('削除しました'); loadAll();
+}
+async function moveMat(id){
+  const m = MATS.find(x => x.id === id), list = matsOf(m.section_id), i = list.indexOf(m);
+  if(i <= 0) return;
+  [list[i - 1], list[i]] = [list[i], list[i - 1]];
+  await renumber(list, 'materials'); loadAll();
+}
+
+// ================================================================
+// 表・裏の切り替え（BASIC ⇄ Advanced）
+// ================================================================
+function applySide(s){
+  side = s; const adv = s === 'advanced';
+  document.body.classList.toggle('adv', adv);
+  SS.$('#face-basic').hidden = adv; SS.$('#face-adv').hidden = !adv;
+  SS.$('#top-title').innerHTML = adv ? '<span class="hl">Advanced</span>' : '<span class="hl">BASIC</span>';
+  SS.$('#top-sub').textContent = adv ? 'まなぶ ー 学びを深める' : 'まなぶ ー まずはここから';
+  SS.$('#flip-label').textContent = adv ? 'BASIC' : 'Advanced';
+}
+let flipping = false;
+function flip(next, instant){
+  if(next === side || flipping) return;
+  const stage = SS.$('#stage');
+  try{ history.replaceState(null, '', '#' + next); }catch(e){}
+  if(instant || matchMedia('(prefers-reduced-motion: reduce)').matches){ applySide(next); scrollTo(0, 0); return; }
+  flipping = true;
+  const vy = innerHeight / 2;
+  stage.style.transformOrigin = '50% ' + (scrollY + vy) + 'px';
+  stage.style.transition = 'transform .22s cubic-bezier(.55,.05,.9,.5)';
+  stage.style.transform = 'perspective(1100px) rotateY(90deg)';
+  setTimeout(() => {
+    applySide(next); scrollTo(0, 0);
+    stage.style.transition = 'none'; stage.style.transformOrigin = '50% ' + vy + 'px';
+    stage.style.transform = 'perspective(1100px) rotateY(-90deg)';
+    void stage.offsetWidth;
+    stage.style.transition = 'transform .34s cubic-bezier(.16,1,.3,1)';
+    stage.style.transform = 'perspective(1100px) rotateY(0deg)';
+    setTimeout(() => { stage.style.transition = stage.style.transform = stage.style.transformOrigin = ''; flipping = false; }, 360);
+  }, 230);
+}
+SS.$('#flip-btn').onclick = () => flip(side === 'basic' ? 'advanced' : 'basic');
+SS.$('#edit-btn').onclick = () => { const on = !document.body.classList.contains('editing'); document.body.classList.toggle('editing', on); SS.$('#edit-btn').classList.toggle('on', on); SS.$('#edit-btn').textContent = on ? '編集中' : '編集'; };
+
+// URL の #〜 で開く（例：manabu.html#advanced、#sec-xxxx、#label-1）
+function goHash(){
+  const h = location.hash.slice(1);
+  if(h === 'advanced' || h === 'basic'){ applySide(h); return; }
+  if(h.startsWith('label-')){ openLabel(+h.slice(6)); return; }
+  if(h.startsWith('sec-')){
+    const id = h.slice(4), s = SECS.find(x => x.id === id); if(!s) return;
+    applySide(s.side === 'basic' ? 'basic' : 'advanced');
+    openIds.add(id); if(s.parent_id) openIds.add(s.parent_id); render();
+    setTimeout(() => { const el = document.getElementById('sec-' + id); if(el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 120);
+  }
+}
+
+SS.boot().then(async () => {
+  SS.tabbar('manabu');
+  if(SS.isAdmin()) SS.$('#edit-btn').classList.remove('hidden');
+  await loadAll();
+  goHash();
+  SS.reveal();
+});
+</script>
+</body>
+</html>

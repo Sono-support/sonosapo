@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>チャット | ソノサポ</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0C0C0C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" href="assets/favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="config.js"></script>
+<script src="common.js"></script>
+<style>
+.welcome{position:relative;overflow:hidden;border-radius:18px;padding:16px 16px 16px;margin-bottom:12px;
+  background:radial-gradient(100% 120% at 100% 100%, #2A4AA8 0%, transparent 62%), var(--navy);border:1px solid rgba(143,166,232,.35);}
+.welcome b{font-size:15px;display:block;margin-bottom:4px;}
+.welcome p{font-size:12px;color:#C9D3F2;line-height:1.75;max-width:66%;}
+.welcome img{position:absolute;right:-8px;bottom:-30px;height:150px;}
+.welcome .x{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;border:none;background:rgba(0,0,0,.3);color:#fff;font-size:12px;z-index:1;}
+.filters{display:flex;flex-direction:column;gap:10px;margin:12px 0 12px;}
+.search{position:relative;}
+.search input{padding-left:36px;}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--dim);}
+
+.th{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 14px;margin-bottom:9px;cursor:pointer;position:relative;}
+.th:active{border-color:var(--orange);}
+.th.unread{border-color:rgba(255,147,5,.6);}
+.th-title{font-size:15px;font-weight:800;line-height:1.45;margin-top:6px;word-break:break-word;}
+.th-ex{font-size:12.5px;color:var(--muted);line-height:1.7;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.th .thumbs img{width:64px;height:64px;}
+.th-foot{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.tag{font-size:10.5px;font-weight:700;color:var(--orange-light);background:var(--orange-bg);border:1px solid rgba(255,147,5,.28);border-radius:999px;padding:1px 8px;}
+.stat{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--muted);font-family:"JetBrains Mono",monospace;}
+.stat svg{width:13px;height:13px;}
+.solved{font-size:10.5px;font-weight:800;color:#0C0C0C;background:var(--ok);border-radius:999px;padding:2px 8px;}
+.open-q{font-size:10.5px;font-weight:800;color:var(--muted);border:1px solid var(--border-light);border-radius:999px;padding:1px 8px;}
+.newb{font-size:10px;font-weight:800;color:var(--black);background:var(--orange);border-radius:999px;padding:1px 8px;}
+.univ-only{font-size:10px;font-weight:700;color:var(--navy-light);border:1px solid rgba(143,166,232,.45);border-radius:5px;padding:0 6px;}
+.more{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,147,5,.4);background:transparent;color:var(--orange-light);font-weight:800;}
+
+/* 詳細 */
+#sheet-thread .sheet{max-height:94vh;max-height:94dvh;}
+.q-box{border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:6px;}
+.q-title{font-size:18px;font-weight:900;line-height:1.45;margin:8px 0 8px;word-break:break-word;}
+.q-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center;}
+.sec-link{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--blue);text-decoration:none;border:1px solid rgba(90,167,232,.4);border-radius:9px;padding:5px 10px;margin-top:10px;}
+.rep{padding:12px 0;border-bottom:1px solid var(--border);}
+.rep.best{background:linear-gradient(90deg, rgba(108,197,138,.1), transparent);border:1px solid rgba(108,197,138,.45);border-radius:14px;padding:12px;margin:8px 0;}
+.best-badge{font-size:10.5px;font-weight:800;color:#0C0C0C;background:var(--ok);border-radius:999px;padding:1px 8px;}
+.rep .text-body{font-size:13.5px;margin-top:5px;}
+.rep-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.mini-btn{border:1px solid var(--border-light);background:transparent;color:var(--muted);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;}
+.mini-btn.green{color:var(--ok);border-color:rgba(108,197,138,.45);}
+.mini-btn.red{color:var(--ng);border-color:rgba(240,96,96,.4);}
+.composer{position:sticky;bottom:calc(-22px - env(safe-area-inset-bottom));background:var(--dark);border-top:1px solid var(--border);margin:14px -18px calc(-22px - env(safe-area-inset-bottom));padding:12px 18px calc(14px + env(safe-area-inset-bottom));}
+.composer textarea{min-height:44px;height:44px;font-size:14px;padding:9px 12px;}
+.composer .img-add,.composer .img-pick{width:46px;height:46px;font-size:10px;}
+.composer .img-picks{margin-top:6px;}
+.comp-row{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;}
+.comp-row .check{margin-top:0;font-size:12px;}
+.privacy{font-size:12px;color:#FFC07A;background:rgba(255,147,5,.08);border:1px solid rgba(255,147,5,.3);border-radius:10px;padding:9px 11px;margin-top:8px;}
+.privacy .check{margin-top:0;color:#FFD6A6;}
+.tag-pick{display:flex;flex-wrap:wrap;gap:6px;}
+.tag-pick button{border:1px solid var(--border-light);background:var(--black);color:var(--muted);border-radius:999px;padding:6px 11px;font-size:12px;font-weight:700;}
+.tag-pick button.on{background:var(--orange);border-color:var(--orange);color:var(--black);}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <div><div class="page-title">チャット</div><div class="page-sub">全国のエコー仲間・指導医に質問できる</div></div>
+  <button class="icon-btn" id="reload" aria-label="新しい投稿を読み込む"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
+</div>
+
+<div class="wrap">
+  <div class="welcome hidden" id="welcome">
+    <button class="x" id="welcome-x" aria-label="閉じる">✕</button>
+    <b>ひとりで悩まなくて大丈夫。</b>
+    <p>指導医がいない大学でも、全国の先輩や確認者（指導医）が答えてくれます。描出画像を貼って、気軽に聞いてみよう。</p>
+    <img src="assets/doctor.webp" alt="">
+  </div>
+
+  <div class="filters">
+    <div class="seg" id="scope-seg"><button type="button" data-s="national" class="on">全国</button><button type="button" data-s="university" id="seg-univ">自大学だけ</button></div>
+    <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input class="field" id="q" placeholder="キーワードで探す（例：心窩部、肋骨が邪魔）" enterkeyhint="search"></div>
+    <div class="chips scroll" id="status-chips"></div>
+    <div class="chips scroll" id="tag-chips"></div>
+  </div>
+
+  <div id="list"><div class="loading">読み込み中</div></div>
+</div>
+
+<button class="fab" id="fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>質問する</button>
+
+<!-- 質問の詳細 -->
+<div class="sheet-overlay" id="sheet-thread">
+  <div class="sheet">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><div class="sheet-sub" id="t-scope"></div><button class="sheet-close" data-close="sheet-thread">✕</button></div>
+    <div class="sheet-body" id="t-body"></div>
+  </div>
+</div>
+
+<!-- 質問を書く -->
+<div class="sheet-overlay" id="sheet-new" data-sticky="1">
+  <div class="sheet">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><div><div class="sheet-title">質問する</div><div class="sheet-sub">困ったこと、なんでもどうぞ</div></div><button class="sheet-close" data-close="sheet-new">✕</button></div>
+    <div class="sheet-body">
+      <label class="label" style="margin-top:0;">どこに聞く？</label>
+      <div class="seg" id="n-scope"><button type="button" data-s="national" class="on">全国に聞く</button><button type="button" data-s="university" id="n-scope-univ">自大学だけ</button></div>
+      <div class="hint" id="n-scope-hint">全国の参加者・確認者（指導医）が見られます。</div>
+      <div id="n-section" class="hidden" style="margin-top:12px;"></div>
+      <label class="label">タイトル <span class="req">*</span></label>
+      <input class="field" id="n-title" maxlength="80" placeholder="例：心窩部からだと右室がうまく出ません">
+      <label class="label">くわしく</label>
+      <textarea class="field" id="n-body" maxlength="3000" placeholder="どんな状況で、何を試して、どう見えたか。画像があると答えやすくなります。"></textarea>
+      <label class="label">テーマ（いくつでも）</label>
+      <div class="tag-pick" id="n-tags"></div>
+      <label class="label">画像（4枚まで）</label>
+      <div class="img-picks" id="n-imgs"></div>
+      <div class="privacy hidden" id="n-privacy"><label class="check"><input type="checkbox" id="n-priv-ok">画像に、患者さんの名前・ID・顔など、個人が分かる情報が写っていないことを確認しました</label></div>
+      <label class="check"><input type="checkbox" id="n-anon">匿名で質問する（名前・大学を出さない）</label>
+      <div class="msg" id="n-msg"></div>
+      <button class="btn block" style="margin-top:14px;" id="n-send">質問を投稿する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// チャット（質問スペース）
+//   threads        … 質問（全国 or 自大学だけ）
+//   thread_replies … 返信（画像つき、ベストアンサー）
+//   likes          … 参考になった
+// 名前・大学は投稿時にサーバー側で入れる（匿名なら空）。
+// ================================================================
+const TAGS = ['心臓','肺','FAST','腹部','頸部','血管','運動器','解剖','機器・設定','部の運営','その他'];
+const STATUSES = [['all','すべて'],['open','未解決'],['solved','解決済み'],['mine','自分の質問']];
+const PAGE = 20;
+let scope = 'national', status = 'all', tag = null, query = '', rows = [], hasMore = false, likeMap = {};
+let SECTIONS = {};
+
+SS.$('#status-chips').innerHTML = STATUSES.map(([k, l]) => `<button type="button" class="chip${k === 'all' ? ' on' : ''}" data-st="${k}">${l}</button>`).join('');
+SS.$('#tag-chips').innerHTML = TAGS.map(t => `<button type="button" class="chip" data-tag="${t}">#${t}</button>`).join('');
+SS.$$('#status-chips .chip').forEach(b => b.onclick = () => { status = b.dataset.st; SS.$$('#status-chips .chip').forEach(x => x.classList.toggle('on', x === b)); load(); });
+SS.$$('#tag-chips .chip').forEach(b => b.onclick = () => { tag = tag === b.dataset.tag ? null : b.dataset.tag; SS.$$('#tag-chips .chip').forEach(x => x.classList.toggle('on', x.dataset.tag === tag)); load(); });
+SS.$$('#scope-seg button').forEach(b => b.onclick = () => { scope = b.dataset.s; SS.$$('#scope-seg button').forEach(x => x.classList.toggle('on', x === b)); load(); });
+let qTimer; SS.$('#q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(() => { query = SS.$('#q').value.trim(); load(); }, 400); });
+SS.$('#reload').onclick = () => { load(); SS.toast('最新にしました'); };
+
+function buildQuery(from){
+  let qb = sb.from('threads').select('*').eq('scope', scope).order('last_activity_at', { ascending: false }).range(from, from + PAGE - 1);
+  if(status === 'open') qb = qb.eq('is_resolved', false);
+  if(status === 'solved') qb = qb.eq('is_resolved', true);
+  if(status === 'mine') qb = qb.in('id', [...SS.myOwned].length ? [...SS.myOwned] : ['00000000-0000-0000-0000-000000000000']);
+  if(tag) qb = qb.contains('tags', [tag]);
+  const safe = query.replace(/[,()*%\\]/g, ' ').trim();
+  if(safe) qb = qb.or(`title.ilike.%${safe}%,body.ilike.%${safe}%`);
+  return qb;
+}
+async function load(more){
+  const list = SS.$('#list');
+  if(!more){ list.innerHTML = '<div class="loading">読み込み中</div>'; rows = []; }
+  await SS.loadOwned();
+  const { data, error } = await buildQuery(rows.length);
+  if(error){ list.innerHTML = '<div class="empty">読み込めませんでした。<br>' + SS.esc(SS.friendly(error)) + '</div>'; return; }
+  rows = rows.concat(data || []); hasMore = (data || []).length === PAGE;
+  const [lk, urls] = await Promise.all([SS.likes.load(rows.map(r => r.id)), SS.signedUrls([].concat(...rows.map(r => r.image_paths.slice(0, 3))))]);
+  likeMap = lk; render(urls);
+}
+function render(urls){
+  const seen = SS.getSeen();
+  if(!rows.length){
+    SS.$('#list').innerHTML = `<div class="empty">${query || tag || status !== 'all' ? '条件に合う質問はありません。' : 'まだ質問はありません。<br>右下の「質問する」から、最初の一歩をどうぞ。'}</div>`;
+    return;
+  }
+  SS.$('#list').innerHTML = rows.map(r => {
+    const unread = SS.owns(r.id) && r.reply_count > (seen[r.id] || 0);
+    return `<div class="th${unread ? ' unread' : ''}" data-id="${r.id}">
+      <div class="au">${SS.authorHtml(r)}${r.scope === 'university' ? '<span class="univ-only">自大学</span>' : ''}<span class="au-time">${SS.ago(r.last_activity_at)}</span></div>
+      <div class="th-title">${SS.esc(r.title)}</div>
+      ${r.body ? `<div class="th-ex">${SS.esc(r.body)}</div>` : ''}
+      ${SS.thumbsHtml(r.image_paths.slice(0, 3), urls)}
+      <div class="th-foot">
+        ${r.is_resolved ? '<span class="solved">✓ 解決済み</span>' : '<span class="open-q">回答募集中</span>'}
+        ${unread ? '<span class="newb">新しい返信</span>' : ''}
+        ${(r.tags || []).map(t => `<span class="tag">#${SS.esc(t)}</span>`).join('')}
+        <span style="margin-left:auto;display:flex;gap:10px;">
+          <span class="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>${r.reply_count}</span>
+          <span class="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>${(likeMap[r.id] || {}).n || 0}</span>
+        </span>
+      </div></div>`;
+  }).join('') + (hasMore ? '<button class="more" id="more">もっと見る</button>' : '');
+  SS.$$('#list .th').forEach(el => el.onclick = (ev) => { if(ev.target.closest('.thumbs')) return; openThread(el.dataset.id); });
+  const m = SS.$('#more'); if(m) m.onclick = () => { m.disabled = true; m.textContent = '読み込み中…'; load(true); };
+}
+
+// ================================================================
+// 質問の詳細
+// ================================================================
+let cur = null, replyPicker = null;
+async function openThread(id){
+  SS.openSheet('sheet-thread');
+  SS.$('#t-body').innerHTML = '<div class="loading">読み込み中</div>';
+  const [{ data: t }, { data: reps }] = await Promise.all([
+    sb.from('threads').select('*').eq('id', id).maybeSingle(),
+    sb.from('thread_replies').select('*').eq('thread_id', id).order('created_at'),
+  ]);
+  if(!t){ SS.$('#t-body').innerHTML = '<div class="empty">この質問は見つかりませんでした（削除された可能性があります）</div>'; return; }
+  cur = t;
+  SS.setSeen(t.id, t.reply_count);
+  try{ history.replaceState(null, '', '?t=' + t.id); }catch(e){}
+  await SS.loadOwned();
+  const replies = reps || [];
+  const [urls, lk] = await Promise.all([
+    SS.signedUrls([].concat(t.image_paths, ...replies.map(r => r.image_paths))),
+    SS.likes.load([t.id, ...replies.map(r => r.id)]),
+  ]);
+  let secHtml = '';
+  if(t.section_id){
+    if(!SECTIONS[t.section_id]){ const { data: s } = await sb.from('sections').select('id,title').eq('id', t.section_id).maybeSingle(); if(s) SECTIONS[s.id] = s; }
+    const s = SECTIONS[t.section_id];
+    if(s) secHtml = `<a class="sec-link" href="manabu.html#sec-${s.id}">📘 まなぶ：${SS.esc(s.title)}</a>`;
+  }
+  SS.$('#t-scope').textContent = t.scope === 'university' ? '自大学だけの質問' : '全国の質問';
+  const isOwner = SS.owns(t.id);
+  const best = replies.filter(r => r.is_best), others = replies.filter(r => !r.is_best);
+  const repHtml = r => `<div class="rep${r.is_best ? ' best' : ''}">
+      <div class="au">${SS.authorHtml(r)}${r.is_best ? '<span class="best-badge">ベストアンサー</span>' : ''}<span class="au-time">${SS.ago(r.created_at)}</span></div>
+      ${r.body ? `<div class="text-body">${SS.linkify(r.body)}</div>` : ''}
+      ${SS.thumbsHtml(r.image_paths, urls)}
+      <div class="rep-actions">${SS.likes.html(r.id, lk[r.id])}
+        ${(isOwner || SS.isAdmin()) && !SS.owns(r.id) ? `<button class="mini-btn green" data-best="${r.id}">${r.is_best ? 'ベストアンサーを外す' : 'ベストアンサーにする'}</button>` : ''}
+        ${(SS.owns(r.id) || SS.isAdmin()) ? `<button class="mini-btn red" data-delrep="${r.id}">削除</button>` : ''}
+      </div></div>`;
+  SS.$('#t-body').innerHTML = `
+    <div class="q-box">
+      <div class="au">${SS.authorHtml(t)}<span class="au-time">${SS.fmtDate(t.created_at)}</span></div>
+      <div class="q-title">${SS.esc(t.title)}</div>
+      ${t.body ? `<div class="text-body">${SS.linkify(t.body)}</div>` : ''}
+      ${SS.thumbsHtml(t.image_paths, urls)}
+      ${secHtml}
+      <div class="th-foot">${t.is_resolved ? '<span class="solved">✓ 解決済み</span>' : '<span class="open-q">回答募集中</span>'}${(t.tags || []).map(x => `<span class="tag">#${SS.esc(x)}</span>`).join('')}</div>
+      <div class="q-actions">${SS.likes.html(t.id, lk[t.id])}
+        ${(isOwner || SS.isStaff()) ? `<button class="mini-btn green" id="t-resolve">${t.is_resolved ? '未解決に戻す' : '解決済みにする'}</button>` : ''}
+        ${(isOwner || SS.isAdmin()) ? `<button class="mini-btn red" id="t-del">質問を削除</button>` : ''}
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:800;color:var(--muted);margin-top:10px;">返信 ${replies.length}件</div>
+    ${best.map(repHtml).join('')}${others.map(repHtml).join('') || (best.length ? '' : '<div class="hint">まだ返信はありません。分かる人は気軽に答えてみてください。</div>')}
+    <div class="composer">
+      <textarea class="field" id="r-text" maxlength="3000" placeholder="返信を書く"></textarea>
+      <div class="comp-row"><div class="img-picks" id="r-imgs" style="margin:0;"></div><label class="check"><input type="checkbox" id="r-anon">匿名</label><button class="btn sm" style="margin-left:auto;" id="r-send">返信する</button></div>
+      <div class="privacy hidden" id="r-privacy"><label class="check"><input type="checkbox" id="r-priv-ok">画像に個人が分かる情報が写っていないことを確認しました</label></div>
+      <div class="msg" id="r-msg"></div>
+    </div>`;
+  replyPicker = SS.imagePicker(SS.$('#r-imgs'), 4);
+  SS.$('#r-imgs').addEventListener('change', () => SS.$('#r-privacy').classList.toggle('hidden', !replyPicker.count()));
+  const draftKey = 'ss_draft_r_' + t.id;
+  try{ SS.$('#r-text').value = localStorage.getItem(draftKey) || ''; }catch(e){}
+  SS.$('#r-text').addEventListener('input', () => { try{ localStorage.setItem(draftKey, SS.$('#r-text').value); }catch(e){} });
+  SS.$('#r-send').onclick = () => sendReply(draftKey);
+  const rs = SS.$('#t-resolve'); if(rs) rs.onclick = async () => { const { error } = await sb.rpc('toggle_resolved', { p_thread: t.id }); if(error) return SS.toast(SS.friendly(error)); openThread(t.id); load(); };
+  const td = SS.$('#t-del'); if(td) td.onclick = async () => {
+    if(!confirm('この質問を削除します。返信もすべて消えます。よろしいですか？')) return;
+    const paths = [].concat(t.image_paths, ...replies.map(r => r.image_paths));
+    const { error } = await sb.from('threads').delete().eq('id', t.id);
+    if(error) return SS.toast(SS.friendly(error));
+    if(paths.length) sb.storage.from('posts').remove(paths);
+    SS.closeSheet('sheet-thread'); load();
+  };
+  SS.$$('#t-body [data-best]').forEach(b => b.onclick = async () => { const { error } = await sb.rpc('mark_best', { p_reply: b.dataset.best }); if(error) return SS.toast(SS.friendly(error)); openThread(t.id); load(); });
+  SS.$$('#t-body [data-delrep]').forEach(b => b.onclick = async () => {
+    if(!confirm('この返信を削除しますか？')) return;
+    const r = replies.find(x => x.id === b.dataset.delrep);
+    const { error } = await sb.from('thread_replies').delete().eq('id', r.id);
+    if(error) return SS.toast(SS.friendly(error));
+    if(r.image_paths.length) sb.storage.from('posts').remove(r.image_paths);
+    openThread(t.id);
+  });
+}
+async function sendReply(draftKey){
+  const btn = SS.$('#r-send'), body = SS.$('#r-text').value.trim(), blobs = replyPicker.get();
+  SS.msg('r-msg');
+  if(!body && !blobs.length){ SS.msg('r-msg', '返信か画像を入れてください。'); return; }
+  if(blobs.length && !SS.$('#r-priv-ok').checked){ SS.msg('r-msg', '画像の個人情報の確認にチェックを入れてください。'); return; }
+  btn.disabled = true; btn.textContent = '送信中…';
+  try{
+    const paths = blobs.length ? await SS.uploadImages(blobs) : [];
+    const { error } = await sb.from('thread_replies').insert({ thread_id: cur.id, body, image_paths: paths, is_anonymous: SS.$('#r-anon').checked });
+    if(error){ if(paths.length) await sb.storage.from('posts').remove(paths); throw error; }
+    try{ localStorage.removeItem(draftKey); }catch(e){}
+    SS.setSeen(cur.id, cur.reply_count + 1);
+    await openThread(cur.id); load();
+  }catch(e){ SS.msg('r-msg', SS.friendly(e)); btn.disabled = false; btn.textContent = '返信する'; }
+}
+
+// 参考になった（一覧・詳細の両方）
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-like]'); if(!b) return;
+  ev.stopPropagation();
+  const id = b.dataset.like, on = b.classList.contains('on');
+  b.disabled = true;
+  const { error } = await SS.likes.toggle(id, on);
+  b.disabled = false;
+  if(error) return SS.toast(SS.friendly(error));
+  const n = b.querySelector('b'); n.textContent = (+n.textContent) + (on ? -1 : 1);
+  b.classList.toggle('on', !on); b.querySelector('svg').setAttribute('fill', on ? 'none' : 'currentColor');
+});
+
+// ================================================================
+// 質問を書く
+// ================================================================
+let nScope = 'national', nTags = new Set(), nSection = null, newPicker = null;
+const DRAFT_NEW = 'ss_draft_new';
+function drawNew(){
+  SS.$$('#n-scope button').forEach(b => b.classList.toggle('on', b.dataset.s === nScope));
+  SS.$('#n-scope-hint').textContent = nScope === 'national' ? '全国の参加者・確認者（指導医）が見られます。' : (SS.univ ? SS.univ.name + ' の人だけが見られます。' : '');
+  SS.$('#n-tags').innerHTML = TAGS.map(t => `<button type="button" class="${nTags.has(t) ? 'on' : ''}" data-t="${t}">#${t}</button>`).join('');
+  SS.$$('#n-tags button').forEach(b => b.onclick = () => { nTags.has(b.dataset.t) ? nTags.delete(b.dataset.t) : nTags.add(b.dataset.t); drawNew(); });
+}
+SS.$$('#n-scope button').forEach(b => b.onclick = () => { nScope = b.dataset.s; drawNew(); });
+async function openNew(sectionId){
+  nSection = sectionId || null; nTags = new Set(); nScope = 'national';
+  if(!newPicker){ newPicker = SS.imagePicker(SS.$('#n-imgs'), 4); SS.$('#n-imgs').addEventListener('change', () => SS.$('#n-privacy').classList.toggle('hidden', !newPicker.count())); }
+  SS.$('#n-section').classList.add('hidden');
+  if(nSection){
+    const { data: s } = await sb.from('sections').select('id,title,parent_id').eq('id', nSection).maybeSingle();
+    if(s){
+      SS.$('#n-section').innerHTML = `<span class="sec-link" style="margin:0;">📘 まなぶ：${SS.esc(s.title)} について</span>`;
+      SS.$('#n-section').classList.remove('hidden');
+      const guess = TAGS.find(t => s.title.includes(t)); if(guess) nTags.add(guess);
+    } else nSection = null;
+  }
+  try{ const d = JSON.parse(localStorage.getItem(DRAFT_NEW) || '{}'); SS.$('#n-title').value = d.t || ''; SS.$('#n-body').value = d.b || ''; }catch(e){}
+  SS.$('#n-anon').checked = false; SS.$('#n-priv-ok').checked = false; SS.msg('n-msg');
+  drawNew(); SS.openSheet('sheet-new');
+}
+['#n-title','#n-body'].forEach(s => SS.$(s).addEventListener('input', () => { try{ localStorage.setItem(DRAFT_NEW, JSON.stringify({ t: SS.$('#n-title').value, b: SS.$('#n-body').value })); }catch(e){} }));
+SS.$('#fab').onclick = () => openNew(null);
+SS.$('#n-send').onclick = async () => {
+  const btn = SS.$('#n-send'), title = SS.$('#n-title').value.trim(), body = SS.$('#n-body').value.trim(), blobs = newPicker.get();
+  SS.msg('n-msg');
+  if(!title){ SS.msg('n-msg', 'タイトルを入力してください。'); return; }
+  if(blobs.length && !SS.$('#n-priv-ok').checked){ SS.msg('n-msg', '画像の個人情報の確認にチェックを入れてください。'); return; }
+  btn.disabled = true; btn.textContent = '投稿しています…';
+  try{
+    const paths = blobs.length ? await SS.uploadImages(blobs) : [];
+    const { data, error } = await sb.from('threads').insert({ scope: nScope, title, body, tags: [...nTags], section_id: nSection, image_paths: paths, is_anonymous: SS.$('#n-anon').checked }).select('id').single();
+    if(error){ if(paths.length) await sb.storage.from('posts').remove(paths); throw error; }
+    try{ localStorage.removeItem(DRAFT_NEW); }catch(e){}
+    newPicker.clear(); SS.$('#n-title').value = ''; SS.$('#n-body').value = '';
+    SS.closeSheet('sheet-new'); SS.toast('質問を投稿しました');
+    if(scope !== nScope){ scope = nScope; SS.$$('#scope-seg button').forEach(x => x.classList.toggle('on', x.dataset.s === scope)); }
+    await load(); SS.setSeen(data.id, 0);
+  }catch(e){ SS.msg('n-msg', SS.friendly(e)); }
+  finally{ btn.disabled = false; btn.textContent = '質問を投稿する'; }
+};
+
+// ================================================================
+SS.$('#welcome-x').onclick = () => { SS.$('#welcome').classList.add('hidden'); try{ localStorage.setItem('ss_chat_welcome', '1'); }catch(e){} };
+SS.boot().then(async () => {
+  SS.tabbar('chat');
+  if(!SS.univ){ SS.$('#seg-univ').classList.add('hidden'); SS.$('#n-scope-univ').classList.add('hidden'); }
+  try{ if(localStorage.getItem('ss_chat_welcome') !== '1') SS.$('#welcome').classList.remove('hidden'); }catch(e){}
+  const p = new URLSearchParams(location.search);
+  await load();
+  SS.reveal();
+  if(p.get('new')) openNew(p.get('section'));
+  else if(p.get('t')) openThread(p.get('t'));
+});
+// シートを閉じたら URL を元に戻す
+document.addEventListener('click', ev => { if(ev.target.closest('[data-close="sheet-thread"]') || ev.target.id === 'sheet-thread'){ try{ history.replaceState(null, '', 'chat.html'); }catch(e){} SS.refreshChatBadge(); } });
+// アプリに戻ってきたら最新にする
+document.addEventListener('visibilitychange', () => { if(!document.hidden && SS.me && !document.querySelector('.sheet-overlay.open')) load(); });
+</script>
+</body>
+</html>

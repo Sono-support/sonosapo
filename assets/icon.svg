@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="800" height="800">
+  <defs>
+    <path id="s" d="M 190 112 V 95 Q 190 80 175 80 H 125 Q 90 80 90 115 V 155 Q 90 190 125 190 H 155 Q 190 190 190 225 V 265 Q 190 300 155 300 H 105 Q 90 300 90 285 V 268"/>
+  </defs>
+  <rect width="400" height="400" rx="90" fill="#000"/>
+  <g transform="translate(200,200) scale(0.92) translate(-200,-190) skewX(-8) translate(30,0)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <use href="#s" stroke="#fff" stroke-width="34"/>
+    <use href="#s" transform="translate(120,0)" stroke="#000" stroke-width="54"/>
+    <use href="#s" transform="translate(120,0)" stroke="#FF9305" stroke-width="34"/>
+  </g>
+</svg>

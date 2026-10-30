@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>エコー部立ち上げ | ソノサポ</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14245C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" href="assets/favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="config.js"></script>
+<script src="common.js"></script>
+<style>
+.hero{position:relative;overflow:hidden;background:radial-gradient(90% 90% at 100% 100%, #2A4AA8 0%, transparent 62%), radial-gradient(80% 60% at 0% 0%, rgba(255,147,5,.14), transparent 60%), var(--navy);
+  padding:calc(18px + env(safe-area-inset-top)) 18px 22px;border-bottom:1px solid rgba(143,166,232,.25);}
+.hero-in{max-width:680px;margin:0 auto;position:relative;min-height:190px;}
+.back{display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:700;color:#C9D3F2;text-decoration:none;border:1px solid rgba(143,166,232,.35);border-radius:999px;padding:5px 11px 5px 7px;background:rgba(10,18,48,.4);}
+.hero-k{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.22em;color:var(--navy-light);margin-top:16px;}
+.hero-t{font-size:30px;font-weight:900;line-height:1.25;margin-top:4px;letter-spacing:.04em;}
+.hero-d{font-size:12.5px;color:#C9D3F2;line-height:1.8;margin-top:8px;max-width:60%;}
+.hero-doc{position:absolute;right:-14px;bottom:-22px;height:220px;width:auto;filter:drop-shadow(0 10px 22px rgba(0,0,0,.35));}
+@media (max-width:370px){ .hero-doc{height:180px;} .hero-t{font-size:26px;} }
+
+.cats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 4px;}
+.catc{border:1px solid var(--border);background:var(--card);border-radius:14px;padding:11px 8px;text-align:center;color:var(--text);}
+.catc .e{font-size:20px;line-height:1;}
+.catc .n{font-size:11.5px;font-weight:800;margin-top:6px;line-height:1.35;}
+.catc .c{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--dim);margin-top:2px;}
+.catc.on{border-color:var(--orange);background:var(--orange-bg);}
+
+.kinds{margin:12px 0;}
+.story{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;cursor:pointer;position:relative;overflow:hidden;}
+.story::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;}
+.story.success::before{background:var(--ok);} .story.failure::before{background:#EF6B57;} .story.tip::before{background:var(--blue);}
+.st-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.kind{font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 9px;}
+.kind.success{background:rgba(108,197,138,.15);color:var(--ok);border:1px solid rgba(108,197,138,.4);}
+.kind.failure{background:rgba(239,107,87,.13);color:#F3A292;border:1px solid rgba(239,107,87,.4);}
+.kind.tip{background:rgba(90,167,232,.13);color:var(--blue);border:1px solid rgba(90,167,232,.4);}
+.cat-tag{font-size:10.5px;font-weight:700;color:var(--muted);border:1px solid var(--border-light);border-radius:999px;padding:1px 8px;}
+.st-title{font-size:15.5px;font-weight:800;line-height:1.45;margin-top:8px;}
+.st-ex{font-size:12.5px;color:var(--muted);line-height:1.75;margin-top:4px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.st-foot{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.stat{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--muted);font-family:"JetBrains Mono",monospace;}
+
+.network{margin-top:28px;}
+.network h3{font-size:14px;font-weight:800;margin-bottom:8px;}
+.net-list{display:flex;flex-wrap:wrap;gap:6px;}
+.net{font-size:11.5px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px 10px;}
+.net b{color:var(--orange-light);margin-left:5px;}
+
+.kind-pick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.kind-pick button{border:1px solid var(--border-light);background:var(--black);color:var(--muted);border-radius:12px;padding:10px 6px;font-size:12px;font-weight:800;}
+.kind-pick button.on.success{border-color:var(--ok);color:var(--ok);background:rgba(108,197,138,.1);}
+.kind-pick button.on.failure{border-color:#EF6B57;color:#F3A292;background:rgba(239,107,87,.1);}
+.kind-pick button.on.tip{border-color:var(--blue);color:var(--blue);background:rgba(90,167,232,.1);}
+.cat-pick{display:flex;flex-wrap:wrap;gap:6px;}
+.cat-pick button{border:1px solid var(--border-light);background:var(--black);color:var(--muted);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:700;}
+.cat-pick button.on{background:var(--orange);border-color:var(--orange);color:var(--black);}
+.tmpl{font-size:11.5px;color:var(--muted);background:var(--card);border:1px dashed var(--border-light);border-radius:10px;padding:9px 12px;margin-top:6px;line-height:1.8;}
+.tmpl button{margin-top:6px;}
+.cmt{border-top:1px solid var(--border);padding:10px 0;}
+.cmt .text-body{font-size:13px;margin-top:4px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-in">
+    <a class="back" href="index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>ホーム</a>
+    <div class="hero-k">02 ー BUILD YOUR CLUB</div>
+    <div class="hero-t">エコー部<br>立ち上げ</div>
+    <div class="hero-d">全国の仲間の成功も失敗も、次の誰かの近道に。機器の調達、学び方、部員集め…ぜんぶ残していこう。</div>
+    <img class="hero-doc" src="assets/doctor.webp" alt="">
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="cats" id="cats"></div>
+  <div class="kinds chips scroll" id="kinds"></div>
+  <div id="list"><div class="loading">読み込み中</div></div>
+
+  <div class="network">
+    <h3>全国のエコー部</h3>
+    <div class="hint" style="margin:-4px 0 10px;">団体名が登録されている大学です（確認者がアカウント設定から登録できます）。</div>
+    <div class="net-list" id="net"></div>
+  </div>
+</div>
+
+<button class="fab" id="fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>エピソードを書く</button>
+
+<!-- 詳細 -->
+<div class="sheet-overlay" id="sheet-story">
+  <div class="sheet">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><div class="st-top" id="s-top"></div><button class="sheet-close" data-close="sheet-story">✕</button></div>
+    <div class="sheet-body" id="s-body"></div>
+  </div>
+</div>
+
+<!-- 書く -->
+<div class="sheet-overlay" id="sheet-write" data-sticky="1">
+  <div class="sheet">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><div><div class="sheet-title" id="w-head">エピソードを書く</div><div class="sheet-sub">あなたの経験が、どこかの大学の一歩になります</div></div><button class="sheet-close" data-close="sheet-write">✕</button></div>
+    <div class="sheet-body">
+      <label class="label" style="margin-top:0;">どんな話？</label>
+      <div class="kind-pick" id="w-kind"></div>
+      <label class="label">テーマ</label>
+      <div class="cat-pick" id="w-cat"></div>
+      <label class="label">タイトル <span class="req">*</span></label>
+      <input class="field" id="w-title" maxlength="80" placeholder="例：卒業生の先生に相談して、中古のエコーを譲ってもらえた">
+      <label class="label">本文 <span class="req">*</span></label>
+      <textarea class="field" id="w-body" maxlength="5000" style="min-height:180px;"></textarea>
+      <div class="tmpl">書き方に迷ったら：<br>①どんな状況だったか　②やったこと　③結果どうなったか　④次の人へのアドバイス
+        <br><button type="button" class="btn ghost sm" id="w-tmpl">この形で書き始める</button></div>
+      <label class="label">画像（4枚まで）</label>
+      <div class="img-picks" id="w-imgs"></div>
+      <label class="check"><input type="checkbox" id="w-anon">匿名で投稿する（名前・大学を出さない）</label>
+      <div class="msg" id="w-msg"></div>
+      <button class="btn block" style="margin-top:14px;" id="w-send">投稿する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// エコー部立ち上げ：成功・失敗・工夫のエピソード集
+// ================================================================
+const CATS = [
+  { k:'機器の調達', e:'🖥️' }, { k:'学び方', e:'📚' }, { k:'部員集め', e:'🙋' },
+  { k:'指導医・大学', e:'🤝' }, { k:'運営・続け方', e:'🔁' }, { k:'その他', e:'💡' },
+];
+const KINDS = { success: 'うまくいった', failure: '失敗から学んだ', tip: '工夫・アイデア' };
+let STORIES = [], cat = null, kind = 'all', likeMap = {}, cmtCount = {};
+
+function drawFilters(){
+  SS.$('#cats').innerHTML = CATS.map(c => {
+    const n = STORIES.filter(s => s.category === c.k).length;
+    return `<button type="button" class="catc${cat === c.k ? ' on' : ''}" data-c="${c.k}"><div class="e">${c.e}</div><div class="n">${c.k}</div><div class="c">${n}件</div></button>`;
+  }).join('');
+  SS.$('#kinds').innerHTML = [['all','すべて'], ...Object.entries(KINDS)].map(([k, l]) => `<button type="button" class="chip${kind === k ? ' on' : ''}" data-k="${k}">${l}</button>`).join('');
+  SS.$$('#cats .catc').forEach(b => b.onclick = () => { cat = cat === b.dataset.c ? null : b.dataset.c; drawFilters(); render(); });
+  SS.$$('#kinds .chip').forEach(b => b.onclick = () => { kind = b.dataset.k; drawFilters(); render(); });
+}
+async function load(){
+  await SS.loadOwned();
+  const { data, error } = await sb.from('stories').select('*').order('created_at', { ascending: false }).limit(300);
+  if(error){ SS.$('#list').innerHTML = '<div class="empty">読み込めませんでした</div>'; return; }
+  STORIES = data || [];
+  const ids = STORIES.map(s => s.id);
+  likeMap = await SS.likes.load(ids);
+  cmtCount = {};
+  if(ids.length){ const { data: cs } = await sb.from('story_comments').select('story_id').in('story_id', ids); (cs || []).forEach(c => cmtCount[c.story_id] = (cmtCount[c.story_id] || 0) + 1); }
+  drawFilters(); render();
+}
+function render(){
+  const list = STORIES.filter(s => (!cat || s.category === cat) && (kind === 'all' || s.kind === kind));
+  SS.$('#list').innerHTML = list.length ? list.map(s => `
+    <div class="story ${s.kind}" data-id="${s.id}">
+      <div class="st-top"><span class="kind ${s.kind}">${KINDS[s.kind]}</span><span class="cat-tag">${SS.esc(s.category)}</span></div>
+      <div class="st-title">${SS.esc(s.title)}</div>
+      <div class="st-ex">${SS.esc(s.body)}</div>
+      <div class="st-foot"><div class="au" style="flex:1;">${SS.authorHtml(s)}</div>
+        <span class="stat">👍 ${(likeMap[s.id] || {}).n || 0}</span><span class="stat">💬 ${cmtCount[s.id] || 0}</span><span class="au-time" style="margin-left:0;">${SS.fmtDate(s.created_at)}</span></div>
+    </div>`).join('')
+    : `<div class="empty">${STORIES.length ? '条件に合うエピソードはまだありません。' : 'まだエピソードはありません。<br>最初の一つを書いてみませんか？'}</div>`;
+  SS.$$('#list .story').forEach(el => el.onclick = () => openStory(el.dataset.id));
+}
+
+async function openStory(id){
+  const s = STORIES.find(x => x.id === id); if(!s) return;
+  SS.$('#s-top').innerHTML = `<span class="kind ${s.kind}">${KINDS[s.kind]}</span><span class="cat-tag">${SS.esc(s.category)}</span>`;
+  SS.$('#s-body').innerHTML = '<div class="loading"></div>';
+  SS.openSheet('sheet-story');
+  const urls = await SS.signedUrls(s.image_paths);
+  const { data: cs } = await sb.from('story_comments').select('*').eq('story_id', id).order('created_at');
+  SS.$('#s-body').innerHTML = `
+    <div style="font-size:19px;font-weight:900;line-height:1.45;">${SS.esc(s.title)}</div>
+    <div class="au" style="margin:8px 0 12px;">${SS.authorHtml(s)}<span class="au-time">${SS.fmtDate(s.created_at)}</span></div>
+    <div class="text-body">${SS.linkify(s.body)}</div>
+    ${SS.thumbsHtml(s.image_paths, urls)}
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">${SS.likes.html(s.id, likeMap[s.id])}
+      ${SS.owns(s.id) ? '<button class="btn ghost sm" id="s-edit">編集</button>' : ''}
+      ${(SS.owns(s.id) || SS.isAdmin()) ? '<button class="btn danger sm" id="s-del">削除</button>' : ''}</div>
+    <div style="margin-top:18px;font-size:13px;font-weight:800;">コメント ${(cs || []).length}件</div>
+    ${(cs || []).map(c => `<div class="cmt"><div class="au">${SS.authorHtml(c)}<span class="au-time">${SS.ago(c.created_at)}</span></div><div class="text-body">${SS.linkify(c.body)}</div>
+      ${(SS.owns(c.id) || SS.isAdmin()) ? `<button class="btn ghost sm" style="margin-top:6px;" data-delc="${c.id}">削除</button>` : ''}</div>`).join('')}
+    <textarea class="field" id="c-text" maxlength="1000" placeholder="質問・感想・「うちではこうした」など" style="min-height:64px;margin-top:10px;"></textarea>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;"><label class="check" style="margin:0;"><input type="checkbox" id="c-anon">匿名</label><button class="btn sm" style="margin-left:auto;" id="c-send">コメントする</button></div>`;
+  SS.$('#c-send').onclick = async () => {
+    const t = SS.$('#c-text').value.trim(); if(!t) return;
+    const { error } = await sb.from('story_comments').insert({ story_id: id, body: t, is_anonymous: SS.$('#c-anon').checked });
+    if(error) return SS.toast(SS.friendly(error));
+    cmtCount[id] = (cmtCount[id] || 0) + 1; openStory(id); render();
+  };
+  SS.$$('#s-body [data-delc]').forEach(b => b.onclick = async () => { if(!confirm('コメントを削除しますか？')) return; await sb.from('story_comments').delete().eq('id', b.dataset.delc); cmtCount[id]--; openStory(id); render(); });
+  const ed = SS.$('#s-edit'); if(ed) ed.onclick = () => { SS.closeSheet('sheet-story'); openWrite(s); };
+  const dl = SS.$('#s-del'); if(dl) dl.onclick = async () => {
+    if(!confirm('このエピソードを削除しますか？')) return;
+    const { error } = await sb.from('stories').delete().eq('id', id);
+    if(error) return SS.toast(SS.friendly(error));
+    if(s.image_paths.length) sb.storage.from('posts').remove(s.image_paths);
+    SS.closeSheet('sheet-story'); load();
+  };
+}
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-like]'); if(!b) return;
+  const id = b.dataset.like, on = b.classList.contains('on');
+  const { error } = await SS.likes.toggle(id, on); if(error) return SS.toast(SS.friendly(error));
+  likeMap[id] = { n: (likeMap[id] || { n: 0 }).n + (on ? -1 : 1), mine: !on };
+  b.outerHTML = SS.likes.html(id, likeMap[id]); render();
+});
+
+// ---------- 書く・編集 ----------
+let wKind = 'success', wCat = '機器の調達', wPicker = null, wEditing = null;
+function drawWrite(){
+  SS.$('#w-kind').innerHTML = Object.entries(KINDS).map(([k, l]) => `<button type="button" class="${k}${wKind === k ? ' on' : ''}" data-k="${k}">${l}</button>`).join('');
+  SS.$('#w-cat').innerHTML = CATS.map(c => `<button type="button" class="${wCat === c.k ? 'on' : ''}" data-c="${c.k}">${c.e} ${c.k}</button>`).join('');
+  SS.$$('#w-kind button').forEach(b => b.onclick = () => { wKind = b.dataset.k; drawWrite(); });
+  SS.$$('#w-cat button').forEach(b => b.onclick = () => { wCat = b.dataset.c; drawWrite(); });
+}
+function openWrite(s){
+  wEditing = s || null;
+  if(!wPicker) wPicker = SS.imagePicker(SS.$('#w-imgs'), 4);
+  SS.$('#w-head').textContent = s ? 'エピソードを編集' : 'エピソードを書く';
+  wKind = s ? s.kind : 'success'; wCat = s ? s.category : (cat || '機器の調達');
+  SS.$('#w-title').value = s ? s.title : ''; SS.$('#w-body').value = s ? s.body : '';
+  SS.$('#w-anon').checked = s ? s.is_anonymous : false; SS.$('#w-anon').disabled = !!s;
+  SS.$('#w-imgs').style.display = s ? 'none' : '';
+  SS.msg('w-msg'); drawWrite(); SS.openSheet('sheet-write');
+}
+SS.$('#w-tmpl').onclick = () => {
+  const el = SS.$('#w-body');
+  if(el.value.trim() && !confirm('いまの本文の下に、書き方の見出しを足しますか？')) return;
+  el.value = (el.value.trim() ? el.value.trim() + '\n\n' : '') + '【どんな状況だったか】\n\n【やったこと】\n\n【結果どうなったか】\n\n【次の人へのアドバイス】\n';
+  el.focus();
+};
+SS.$('#fab').onclick = () => openWrite(null);
+SS.$('#w-send').onclick = async () => {
+  const btn = SS.$('#w-send'), title = SS.$('#w-title').value.trim(), body = SS.$('#w-body').value.trim();
+  SS.msg('w-msg');
+  if(!title || !body){ SS.msg('w-msg', 'タイトルと本文を入力してください。'); return; }
+  btn.disabled = true;
+  try{
+    if(wEditing){
+      const { error } = await sb.from('stories').update({ title, body, kind: wKind, category: wCat }).eq('id', wEditing.id);
+      if(error) throw error;
+    } else {
+      const blobs = wPicker.get(), paths = blobs.length ? await SS.uploadImages(blobs) : [];
+      const { error } = await sb.from('stories').insert({ title, body, kind: wKind, category: wCat, image_paths: paths, is_anonymous: SS.$('#w-anon').checked });
+      if(error){ if(paths.length) await sb.storage.from('posts').remove(paths); throw error; }
+      wPicker.clear();
+    }
+    SS.closeSheet('sheet-write'); SS.toast('投稿しました。ありがとう！'); load();
+  }catch(e){ SS.msg('w-msg', SS.friendly(e)); }
+  finally{ btn.disabled = false; }
+};
+
+async function loadNetwork(){
+  const { data } = await sb.from('universities').select('name,short_name,group_name').not('group_name', 'is', null).order('sort_order');
+  SS.$('#net').innerHTML = (data || []).map(u => `<span class="net">${SS.esc(u.short_name || u.name)}<b>${SS.esc(u.group_name)}</b></span>`).join('') || '<span class="hint">まだありません</span>';
+}
+
+SS.boot().then(async () => {
+  SS.tabbar('home');
+  await load(); loadNetwork();
+  SS.reveal();
+});
+</script>
+</body>
+</html>
