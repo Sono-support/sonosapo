@@ -2,6 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<!-- 安全のための決まり：このアプリが読み込んでよい場所を、自分のサイト・Supabase・Googleフォントだけに限る -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://gurbkfenumknfdnzxiuo.supabase.co; connect-src 'self' https://gurbkfenumknfdnzxiuo.supabase.co wss://gurbkfenumknfdnzxiuo.supabase.co; media-src 'self' blob: https://gurbkfenumknfdnzxiuo.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>認定アプリ | ソノサポ</title>
 <link rel="manifest" href="manifest.json">
@@ -13,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="vendor/supabase-js-2.117.3.js"></script>
 <script src="config.js"></script>
 <script src="common.js"></script>
 <script>
@@ -247,6 +249,7 @@ body{background:var(--black);color:var(--text);font-family:"Noto Sans JP",sans-s
 </style>
 </head>
 <body>
+<script>SS.earlyCurtain();</script>
 
 <!-- NAV -->
 <nav class="nav">
@@ -1150,7 +1153,7 @@ function renderImageBody(domain, uid){
           <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">撮像日</span>
           <span class="req-badge req">必須</span>
           <input class="field ${prog.subjects[si].name?'':'need'}" type="date" id="cap-${domain.id}-${si}"
-            value="${prog.subjects[si].name}"
+            value="${kpEsc(prog.subjects[si].name)}"
             onchange="updateSubjectName('${domain.id}',${si},this.value)"
             style="max-width:200px;">
           <span id="caphint-${domain.id}-${si}" style="font-size:10px;color:var(--keep);${prog.subjects[si].name?'display:none;':''}">先に撮像日を入れてから画像を提出してください</span>
@@ -1315,7 +1318,7 @@ function renderImageGrid(domainId, si){
           <span id="st-${domainId}-${si}-${view.id}" class="${SC[vs.status]}">${SL[vs.status]}</span>
           <button class="ref-btn" onclick="openRef('${view.refKey}')">基準 ▸</button>
         </div>
-        <div id="fb-${domainId}-${si}-${view.id}" class="feedback${vs.status==='pass'?' pa':vs.status==='keep'?' ke':''}" style="${vs.status==='pass'?'display:none;':''}">${vs.feedback||"（フィードバックなし）"}</div>
+        <div id="fb-${domainId}-${si}-${view.id}" class="feedback${vs.status==='pass'?' pa':vs.status==='keep'?' ke':''}" style="${vs.status==='pass'?'display:none;':''}">${kpEsc(vs.feedback||"（フィードバックなし）")}</div>
       </div>`;
     container.appendChild(div);
     if(vs.fileDataUrl){
@@ -1374,7 +1377,7 @@ function updateDomainMeta(domainId){
       }
       return `<div style="display:flex;align-items:center;gap:4px;">
         ${allPass?`<span class="done-badge" style="font-size:9px;padding:1px 5px;">✓</span>`:`<span class="tag" style="font-size:9px;padding:1px 5px;">${si+1}</span>`}
-        <span style="font-size:10px;color:var(--text-dim);max-width:55px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${displayName}</span>
+        <span style="font-size:10px;color:var(--text-dim);max-width:55px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${kpEsc(displayName)}</span>
         <div style="display:flex;gap:3px;">${dots}</div>
       </div>`;
     }).join("");
@@ -1871,7 +1874,7 @@ function renderExamDayMemberList(){
     div.innerHTML=`
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div>
-          <div style="font-size:14px;font-weight:700;">${m.name}${canEntry(m.uid)?'':' <span style="font-size:10px;color:var(--keep);">（資格未充足）</span>'}</div>
+          <div style="font-size:14px;font-weight:700;">${kpEsc(m.name)}${canEntry(m.uid)?'':' <span style="font-size:10px;color:var(--keep);">（資格未充足）</span>'}</div>
           <div style="font-size:11px;color:${m.year?'var(--text-muted)':'var(--keep)'};">${m.year?yearLabel(m.year):'⚠ 学年が未設定です'}</div>
         </div>
         ${certified
@@ -1957,7 +1960,7 @@ function renderExamChecklist(){
   html+=`
     <div class="sec-label" style="margin-top:16px;">確認者コメント（受験者へのフィードバック）</div>
     <textarea id="examday-comment" class="field" style="width:100%;min-height:70px;resize:vertical;font-family:'Noto Sans JP',sans-serif;"
-      placeholder="良かった点・次回に向けたアドバイスなど" onblur="saveExamComment()">${result.comment||""}</textarea>
+      placeholder="良かった点・次回に向けたアドバイスなど" onblur="saveExamComment()">${kpEsc(result.comment||"")}</textarea>
   </div>`;
 
   container.innerHTML=html;
@@ -2053,8 +2056,13 @@ async function reloadApp(){
   location.replace(u.toString());
 }
 
+// 画像のURLは、https か blob: のものだけ使う（それ以外は表示しない）
+function kpSafeImg(u){
+  u=String(u||'');
+  return /^(https:\/\/|blob:|data:image\/)/.test(u) ? kpEsc(u) : '';
+}
 function kpEsc(v){
-  return String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+  return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 }
 
 // 画像の保存期間のお知らせ（合格者のみ）
@@ -2221,7 +2229,7 @@ async function kpSign(url){
   const p=kpStoragePath(url);
   if(!p) return url||null;
   try{
-    const {data,error}=await _supabase.storage.from('cert-images').createSignedUrl(p,60*60*6);
+    const {data,error}=await _supabase.storage.from('cert-images').createSignedUrl(p,60*60);
     return (error||!data)?url:data.signedUrl;
   }catch(e){ return url; }
 }
@@ -2811,7 +2819,7 @@ function kpPendingBySubject(uid,domain){
 function kpReviewTabLabel(uid,domain,si){
   const prog=PROGRESS[uid][domain.id];
   const name=prog.subjects[si].name;
-  const base=name ? name.slice(5)||`被検者${si+1}` : `被検者${si+1}`;
+  const base=kpEsc(name ? name.slice(5)||`被検者${si+1}` : `被検者${si+1}`);
   const n=kpPendingBySubject(uid,domain)[si];
   return n>0 ? `${base} <span style="color:var(--orange-light);">●${n}</span>` : base;
 }
@@ -2901,14 +2909,14 @@ function renderReviewDomains(uid){
       const viewsHTML=domain.views.map(view=>{
         const vs=prog.subjects[si].views[view.id];
         if(!vs) return '';
-        const hasImg=!!vs.fileDataUrl;
+        const hasImg=!!kpSafeImg(vs.fileDataUrl);
         const isPassed = vs.status === 'pass';
         const isKept = vs.status === 'keep';
         return `
           <div class="rev-img-card ${vs.status==='pending'?'is-pending':''}" id="rvic-${uid}-${domain.id}-${si}-${view.id}">
             <div class="rev-img-top">
               ${hasImg
-                ?`<img src="${vs.fileDataUrl}" style="width:100%;height:100%;object-fit:cover;">`
+                ?`<img src="${kpSafeImg(vs.fileDataUrl)}" style="width:100%;height:100%;object-fit:cover;">`
                 :`<div style="font-size:10px;color:var(--text-dim);text-align:center;padding:8px;">未提出</div>`}
             </div>
             <div class="rev-img-bottom">
@@ -2918,7 +2926,7 @@ function renderReviewDomains(uid){
                 <textarea class="rev-comment" rows="2"
                   id="rvcmt-${uid}-${domain.id}-${si}-${view.id}"
                   placeholder="フィードバックを入力..."
-                  style="${isPassed?'display:none;':''}">${vs.status==='keep'?vs.feedback:''}</textarea>
+                  style="${isPassed?'display:none;':''}">${kpEsc(vs.status==='keep'?vs.feedback:'')}</textarea>
                 <div class="rev-actions">
                   <button class="rev-btn rev-pass"
                     onclick="reviewSet('${uid}','${domain.id}',${si},'${view.id}','pass')">✓ Pass</button>
@@ -2930,7 +2938,7 @@ function renderReviewDomains(uid){
       }).join("");
       const captureDate = prog.subjects[si].name || "";
       const captureDateHTML = captureDate
-        ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">撮像日：<span style="color:var(--orange);font-weight:700;">${captureDate}</span></div>`
+        ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">撮像日：<span style="color:var(--orange);font-weight:700;">${kpEsc(captureDate)}</span></div>`
         : `<div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;">撮像日：未入力</div>`;
       const practiceHTML=renderPracticeDatesReadonlyHTML(prog.subjects[si].practiceDates);
       return `<div id="rvpanel-${uid}-${domain.id}-${si}" class="subject-panel ${si===firstSi?'active':''}">
@@ -3243,7 +3251,7 @@ function showToast(msg, type='info'){
   };
   const icons={info:'ℹ️',success:'✅',error:'❌',loading:'⏳'};
   const el=document.createElement('div'); el.id='kp-toast';
-  el.style.cssText=`position:fixed;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 14px);left:50%;transform:translateX(-50%);
+  el.style.cssText=`position:fixed;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 14px - var(--ss-gap,0px));left:50%;transform:translateX(-50%);
     z-index:9999;padding:10px 18px;border-radius:4px;border:1px solid;
     font-size:13px;font-family:'Noto Sans JP',sans-serif;
     box-shadow:0 4px 20px rgba(0,0,0,.5);white-space:nowrap;${colors[type]||colors.info}`;

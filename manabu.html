@@ -2,6 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<!-- 安全のための決まり：このアプリが読み込んでよい場所を、自分のサイト・Supabase・Googleフォントだけに限る -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://gurbkfenumknfdnzxiuo.supabase.co; connect-src 'self' https://gurbkfenumknfdnzxiuo.supabase.co wss://gurbkfenumknfdnzxiuo.supabase.co; media-src 'self' blob: https://gurbkfenumknfdnzxiuo.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>まなぶ | ソノサポ</title>
 <link rel="manifest" href="manifest.json">
@@ -13,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="vendor/supabase-js-2.117.3.js"></script>
 <script src="config.js"></script>
 <script src="common.js"></script>
 <style>
@@ -141,9 +143,11 @@ body.adv .dyn-add-btn{border-color:rgba(90,167,232,.45);color:var(--blue);}
 .lbl-pick button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-light);background:var(--black);color:var(--muted);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:700;}
 .lbl-pick button.on{color:var(--text);}
 .drop{display:block;border:1.5px dashed var(--border-light);border-radius:12px;padding:18px;text-align:center;color:var(--muted);font-size:12.5px;cursor:pointer;}
+.mat-rp{background:none;border:none;color:var(--dim);font-size:11px;padding:0 4px;margin-left:4px;}
 </style>
 </head>
 <body>
+<script>SS.earlyCurtain();</script>
 
 
 <div class="stage" id="stage">
@@ -166,6 +170,7 @@ body.adv .dyn-add-btn{border-color:rgba(90,167,232,.45);color:var(--blue);}
   <!-- 表：BASIC -->
   <div class="face" id="face-basic">
     <p class="intro">はじめての人は、①から順番に。セミナーの予習・復習から認定試験まで、迷わず進めます。</p>
+    <p class="intro" style="font-size:11px;color:var(--dim);margin-top:-6px;">資料はソノサポ内限定です。SNSへの掲載や、部外への再配布はしないでください。問題のある資料は「⚑」から運営に知らせてください。</p>
     <div class="trunk" id="basic-list"><div class="loading">読み込み中</div></div>
     <button class="add-sec" data-add-sec="basic|main">＋ BASIC に項目を追加</button>
 
@@ -180,6 +185,7 @@ body.adv .dyn-add-btn{border-color:rgba(90,167,232,.45);color:var(--blue);}
   <!-- 裏：Advanced -->
   <div class="face" id="face-adv" hidden>
     <p class="intro">ここから先は応用ルート。興味のある分野から、どこへでも。</p>
+    <p class="intro" style="font-size:11px;color:var(--dim);margin-top:-6px;">資料はソノサポ内限定です。SNSへの掲載や、部外への再配布はしないでください。問題のある資料は「⚑」から運営に知らせてください。</p>
     <div class="sec-h"><div class="k">BY FIELD</div><div class="t">分野別</div></div>
     <div id="field-list" style="display:flex;flex-direction:column;gap:10px;"></div>
     <button class="add-sec" data-add-sec="advanced|field">＋ 分野を追加</button>
@@ -200,7 +206,7 @@ body.adv .dyn-add-btn{border-color:rgba(90,167,232,.45);color:var(--blue);}
         <label class="label" style="margin-top:0;">💬 質問・訂正・補足・感想など</label>
         <textarea class="field" id="cmt-text" maxlength="1000" placeholder="気づいたことを気軽にどうぞ。その一言が、次の誰かの学びになります。" style="min-height:72px;"></textarea>
         <div class="img-picks" id="cmt-imgs"></div>
-        <div class="cmt-priv hidden" id="cmt-privacy"><label class="check"><input type="checkbox" id="cmt-priv">画像に、患者さんの名前・ID・顔など、個人が分かる情報が写っていないことを確認しました</label></div>
+        <div class="cmt-priv hidden" id="cmt-privacy"><label class="check"><input type="checkbox" id="cmt-priv">画像は練習画像だけで、患者さんの名前・ID・病院名・顔が写っておらず、練習台になった人が誰か分からないことを確認しました</label></div>
         <div class="msg" id="cmt-msg"></div>
         <button class="btn block" style="margin-top:12px;" id="cmt-send">コメントする</button>
       </div>
@@ -232,6 +238,7 @@ body.adv .dyn-add-btn{border-color:rgba(90,167,232,.45);color:var(--blue);}
     <div class="sheet-grab"></div>
     <div class="sheet-head"><div><div class="sheet-title" id="mf-title-h">資料を追加</div><div class="sheet-sub" id="mf-where"></div></div><button class="sheet-close" data-close="sheet-mat">✕</button></div>
     <div class="sheet-body">
+      <div class="hint" style="margin:0 0 12px;padding:10px 12px;border:1px solid rgba(255,147,5,.35);border-radius:10px;background:var(--orange-bg);color:#FFD6A6;">載せてよいのは、<b>自分で作ったもの</b>か、<b>権利者の許可を得たもの</b>だけです（教科書・論文の図の引用も不可）。必要に応じて、「ソノサポ内限定」などの注意事項をスライドに記載してください。</div>
       <div class="seg" id="mf-kind"><button type="button" data-k="file" class="on">ファイル（PDF・画像）</button><button type="button" data-k="link">リンク</button></div>
       <div id="mf-file-wrap">
         <label class="label">ファイル <span class="req">*</span></label>
@@ -303,7 +310,7 @@ function matHtml(m){
       <div class="mat-title">${SS.esc(m.title)}</div>
       ${tags ? `<div class="mat-tags">${tags}</div>` : ''}
       ${m.note ? `<div class="mat-note">${SS.esc(m.note)}</div>` : ''}
-      <div class="mat-meta">${SS.esc(meta)}</div>
+      <div class="mat-meta">${SS.esc(meta)}${!ownMat(m) ? ` <button type="button" class="mat-rp" data-report="materials:${m.id}" aria-label="この資料を通報">⚑</button>` : ''}</div>
     </div>
     <div class="mat-adm${!SS.isAdmin() && ownMat(m) ? ' mine' : ''}">${SS.isAdmin() ? `<button data-mup="${m.id}" aria-label="上へ">↑</button>` : ''}<button data-medit="${m.id}" aria-label="編集">✎</button><button data-mdel="${m.id}" aria-label="削除">✕</button></div>
   </div>`;
@@ -415,9 +422,10 @@ document.addEventListener('click', async (ev) => {
 // ---------- 資料を開く ----------
 async function openMat(m){
   if(!m) return;
-  if(m.kind === 'link'){ window.open(m.url, '_blank', 'noopener'); return; }
+  if(m.kind === 'link'){ if(SS.safeUrl(m.url)) window.open(m.url, '_blank', 'noopener'); return; }
+  SS.toast('資料はソノサポ内限定です（SNS掲載・再配布禁止）');
   const w = window.open('', '_blank');   // iPhoneでポップアップ扱いされないよう、先に窓だけ開く
-  const { data, error } = await sb.storage.from('materials').createSignedUrl(m.storage_path, 3600);
+  const { data, error } = await sb.storage.from('materials').createSignedUrl(m.storage_path, 600);
   if(error || !data){ if(w) w.close(); SS.toast('資料を開けませんでした'); return; }
   if(w) w.location.href = data.signedUrl; else location.href = data.signedUrl;
 }
@@ -452,7 +460,7 @@ async function drawCmts(){
   const urls = await SS.signedUrls([].concat(...rows.map(r => r.image_paths || [])));
   list.innerHTML = rows.length ? rows.map(r => `<div class="cmt"><div class="au">${SS.authorHtml(r)}<span class="au-time">${SS.ago(r.created_at)}</span></div>
       ${r.body ? `<div class="text-body">${SS.linkify(r.body)}</div>` : ''}${SS.thumbsHtml(r.image_paths, urls)}
-      ${(SS.owns(r.id) || SS.isAdmin()) ? `<button class="btn ghost sm" style="margin-top:6px;" data-delcmt="${r.id}">削除</button>` : ''}</div>`).join('')
+      <div style="display:flex;gap:6px;margin-top:6px;">${(SS.owns(r.id) || SS.isAdmin()) ? `<button class="btn ghost sm" data-delcmt="${r.id}">削除</button>` : ''}${!SS.owns(r.id) ? SS.reportBtn('section_comments', r.id) : ''}</div></div>`).join('')
     : '<div class="empty" style="padding:20px 8px;">まだコメントはありません。<br>分からないこと・気づいたことを、気軽にどうぞ。</div>';
   list.querySelectorAll('[data-delcmt]').forEach(b => b.onclick = async () => {
     if(!confirm('このコメントを削除しますか？')) return;

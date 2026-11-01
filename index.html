@@ -2,6 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<!-- 安全のための決まり：このアプリが読み込んでよい場所を、自分のサイト・Supabase・Googleフォントだけに限る -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://gurbkfenumknfdnzxiuo.supabase.co; connect-src 'self' https://gurbkfenumknfdnzxiuo.supabase.co wss://gurbkfenumknfdnzxiuo.supabase.co; media-src 'self' blob: https://gurbkfenumknfdnzxiuo.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ソノサポ</title>
 <link rel="manifest" href="manifest.json">
@@ -15,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="vendor/supabase-js-2.117.3.js"></script>
 <script src="config.js"></script>
 <script src="common.js"></script>
 <style>
@@ -41,7 +43,7 @@
 
 /* ===================== ホーム（1画面におさまる） ===================== */
 #home{display:none;}
-#home.on{display:flex;flex-direction:column;height:calc(100vh - var(--tabbar-h) - 16px);height:calc(100dvh - var(--tabbar-h) - env(safe-area-inset-bottom) - 16px);min-height:560px;}
+#home.on{display:flex;flex-direction:column;height:calc(100vh - var(--tabbar-h) - 16px);height:calc(100dvh + var(--ss-gap) - var(--tabbar-h) - env(safe-area-inset-bottom) - 16px);min-height:560px;}
 .home-top{width:100%;max-width:680px;margin:0 auto;padding:calc(12px + var(--ss-top)) 16px 8px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .avatar{width:40px;height:40px;border-radius:50%;background:var(--orange);color:var(--black);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;text-decoration:none;flex-shrink:0;}
 .greet{flex:1;min-width:0;}
@@ -132,6 +134,14 @@
 .ann-to b{color:var(--text);font-weight:700;}
 .ann-meta{font-size:10.5px;color:var(--dim);margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
 .ann-tabs{margin-bottom:12px;}
+.ann-tabs button{font-size:12px;position:relative;}
+.ann-tabs .n{display:inline-block;min-width:16px;height:16px;line-height:16px;border-radius:999px;background:#F06060;color:#fff;font-size:10px;padding:0 4px;margin-left:4px;font-family:"JetBrains Mono",monospace;}
+.ntf{display:block;text-decoration:none;color:var(--text);background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:8px;}
+.ntf.unread{border-color:rgba(255,147,5,.55);background:linear-gradient(90deg,rgba(255,147,5,.08),var(--card) 60%);}
+.ntf .t{font-size:13px;font-weight:800;}
+.ntf .b{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.6;}
+.ntf .m{font-size:10.5px;color:var(--dim);margin-top:5px;font-family:"JetBrains Mono",monospace;}
+.mc-launch .mc-tag.new{background:var(--orange);border-color:var(--orange);color:var(--black);}
 .uni-pick{max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;margin-top:8px;}
 .uni-pick label{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer;}
 .uni-pick label:last-child{border-bottom:none;}
@@ -155,6 +165,15 @@
 .okite .rule{font-size:17px;font-weight:900;margin-top:8px;line-height:1.55;}
 .okite .why{font-size:13px;color:#CFC6B4;line-height:1.95;margin-top:10px;}
 .okite .why b{color:var(--text);}
+.agree{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-top:16px;font-size:12px;color:var(--muted);line-height:1.75;}
+.agree a{color:var(--orange-light);font-weight:700;}
+.agree .check{margin-top:8px;color:var(--text);}
+.ct-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 13px;margin-bottom:8px;}
+.ct-item .q{font-size:12.5px;white-space:pre-wrap;word-break:break-word;}
+.ct-item .a{font-size:12.5px;white-space:pre-wrap;word-break:break-word;margin-top:8px;padding:8px 10px;border-left:3px solid var(--orange);background:var(--orange-bg);border-radius:6px;}
+.ct-item .m{font-size:10.5px;color:var(--dim);margin-top:5px;font-family:"JetBrains Mono",monospace;}
+.terms-box{font-size:13px;line-height:1.85;}
+.terms-box a{color:var(--orange-light);font-weight:700;}
 .sec-label{font-size:12px;font-weight:800;color:var(--muted);margin:16px 2px 8px;letter-spacing:.06em;}
 
 /* お知らせ・部員として・このアプリについて */
@@ -173,6 +192,7 @@
 </style>
 </head>
 <body>
+<script>SS.earlyCurtain();</script>
 
 <!-- ===================== 参加画面 ===================== -->
 <section id="join">
@@ -207,12 +227,16 @@
         <div class="join-univ-group" id="j-group"></div>
         <span class="join-univ-role" id="j-role"></span>
       </div>
-      <label class="label" for="j-name">名前 <span class="req">*</span></label>
-      <input class="field" id="j-name" maxlength="30" placeholder="山田 太郎" autocomplete="name">
-      <div class="hint">チャットなどに投稿したときに表示されます。</div>
+      <label class="label" for="j-name">名前（ニックネームOK） <span class="req">*</span></label>
+      <input class="field" id="j-name" maxlength="30" placeholder="例：やまだ／エコー太郎" autocomplete="nickname">
+      <div class="hint">チャットなどに投稿したときに、全国の参加者に表示されます。<b style="color:var(--text);">本名でなくてもOK</b>です。気になる人はニックネームにしてください（あとから「アカウント」で変えられます）。</div>
       <div id="j-year-wrap">
         <label class="label" for="j-year">学年</label>
         <select class="field" id="j-year"></select>
+      </div>
+      <div class="agree">
+        参加する前に、<a href="legal.html#safety" target="_blank" rel="noopener">安全についての正直なお知らせ</a>を読んでください。ソノサポは学生が手作りで運営しています。最善を尽くしていますが、情報が絶対に漏れないとは約束できません。
+        <label class="check"><input type="checkbox" id="j-agree"><span><a href="legal.html#terms" target="_blank" rel="noopener">利用規約</a>と<a href="legal.html#privacy" target="_blank" rel="noopener">プライバシーポリシー</a>に同意し、安全についてのお知らせを読みました</span></label>
       </div>
       <div class="msg" id="join-msg"></div>
       <button class="btn block" style="margin-top:16px;" id="join-btn">参加する</button>
@@ -291,8 +315,8 @@
         <img class="mc-doc" src="assets/doctor.webp" alt="">
         <div class="mc-pre">02 ー BUILD</div>
         <div class="mc-title">エコー部<br>立ち上げ</div>
-        <div class="mc-lead">学習環境の整備、学び方、部員集め。全国の成功も失敗も、ここに。</div>
-        <div class="mc-foot"><span class="mc-tag" id="story-count">エピソード</span></div>
+        <div class="mc-lead">学習環境の整備、部員集め、お悩み相談。全国の成功も失敗も、ここに。</div>
+        <div class="mc-foot"><span class="mc-tag" id="story-count">エピソード</span><span class="mc-tag new hidden" id="consult-new"></span></div>
         <span class="mc-go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       </a>
     </div>
@@ -332,11 +356,12 @@
 <div class="sheet-overlay" id="sheet-ann">
   <div class="sheet">
     <div class="sheet-grab"></div>
-    <div class="sheet-head"><div><div class="sheet-title">お知らせ</div><div class="sheet-sub">運営から・全国の大学から</div></div><button class="sheet-close" data-close="sheet-ann">✕</button></div>
+    <div class="sheet-head"><div><div class="sheet-title">お知らせ</div><div class="sheet-sub">運営・全国の大学から／あなたへの通知</div></div><button class="sheet-close" data-close="sheet-ann">✕</button></div>
     <div class="sheet-body">
-      <div class="seg ann-tabs" id="ann-tabs"><button type="button" data-t="read" class="on">受け取ったお知らせ</button><button type="button" data-t="write">お知らせを出す</button></div>
+      <div class="seg ann-tabs" id="ann-tabs"><button type="button" data-t="read" class="on">お知らせ</button><button type="button" data-t="ntf">あなたへの通知<span class="n hidden" id="ntf-n"></span></button><button type="button" data-t="write">お知らせを出す</button></div>
 
       <div id="ann-read"><div id="ann-list"></div></div>
+      <div id="ann-ntf" class="hidden"><div id="ntf-list"></div></div>
 
       <div id="ann-write" class="hidden">
         <label class="label" style="margin-top:0;">差出人</label>
@@ -383,7 +408,10 @@
       <div class="gm-sec">
         <div class="gm-title">🔒 画像と個人情報</div>
         <div class="gm-list">
-          <div class="gm-item">アプリに載せる画像に、患者さんの名前・ID・顔など、個人が分かる情報が写っていないか必ず確認しましょう。</div>
+          <div class="gm-item">実習中の患者さんの画像は投稿しない。投稿してよいのは、学生同士・ボランティアの練習画像だけです。</div>
+          <div class="gm-item">画像に、患者名・ID・病院名・顔が写っていないか、必ず確かめましょう。</div>
+          <div class="gm-item">練習台になった人の名前など、誰の体か分かることは書かない。撮る前に「ソノサポに上げることがある」と伝えて了解をもらいましょう。</div>
+          <div class="gm-item">異常かもしれない所見に気づいたら、アプリには投稿せず、アプリの外で（できれば本人の了解を得てから）指導医か運営に相談しましょう。</div>
           <div class="gm-item">アプリ内の資料は、各大学・作成者のものです。許可なく外部（SNSなど）に公開しないでください。</div>
         </div>
       </div>
@@ -423,10 +451,57 @@
         <div class="why">エコーの道は奥深く、我々もまだ道半ば。<br>人に教えられるほど極めてはいない。<br>あるのは<b>「学びの共有」</b>のみ。</div>
       </div>
 
+      <div class="sec-label" style="margin-top:20px;">安全と決まりごと</div>
+      <a class="row-link" href="legal.html#safety"><div class="row-ic">🛡️</div><div class="row-body"><div class="row-title">安全についての正直なお知らせ</div><div class="row-desc">守っていること・それでも残るリスク</div></div></a>
+      <a class="row-link" href="legal.html#terms"><div class="row-ic">📜</div><div class="row-body"><div class="row-title">利用規約</div><div class="row-desc">投稿のルール・資料・退会</div></div></a>
+      <a class="row-link" href="legal.html#privacy"><div class="row-ic">🔒</div><div class="row-body"><div class="row-title">プライバシーポリシー</div><div class="row-desc">お預かりする情報と、その使い方</div></div></a>
+      <div class="row-link" role="button" tabindex="0" onclick="SS.closeSheet('sheet-about');openContact();"><div class="row-ic">✉️</div><div class="row-body"><div class="row-title">運営に連絡</div><div class="row-desc">安全上の問題・不具合・質問・削除の依頼など（運営だけが読めます）</div></div></div>
       <div style="margin-top:18px;" class="row-link" role="button" tabindex="0" onclick="SS.closeSheet('sheet-about');SS.openSheet('sheet-install');">
         <div class="row-ic">📲</div><div class="row-body"><div class="row-title">ホーム画面に追加する</div><div class="row-desc">アプリのように使えます</div></div>
       </div>
       <div class="hint" style="text-align:center;margin-top:12px;" id="app-ver"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 運営に連絡 ===================== -->
+<div class="sheet-overlay" id="sheet-contact" data-sticky="1">
+  <div class="sheet">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><div><div class="sheet-title">運営に連絡</div><div class="sheet-sub">送った内容は、運営（管理者）だけが読めます</div></div><button class="sheet-close" data-close="sheet-contact">✕</button></div>
+    <div class="sheet-body">
+      <label class="label" style="margin-top:0;">どんな内容？</label>
+      <select class="field" id="ct-cat">
+        <option value="security">安全上の問題（脆弱性）に気づいた</option>
+        <option value="bug">不具合・表示がおかしい</option>
+        <option value="question">質問・相談</option>
+        <option value="delete">削除の依頼（資料・投稿・自分のデータなど）</option>
+        <option value="other">その他</option>
+      </select>
+      <label class="label">内容 <span class="req">*</span></label>
+      <textarea class="field" id="ct-body" maxlength="3000" style="min-height:130px;" placeholder="どの画面で、何が起きたか／何をしてほしいか"></textarea>
+      <div class="hint">安全上の問題は、チャットなど皆が見られる場所には書かず、ここから知らせてください。メール（sono.support55@gmail.com）でも受け付けています。</div>
+      <div class="msg" id="ct-msg"></div>
+      <button class="btn block" style="margin-top:12px;" id="ct-send">送る</button>
+      <div class="sec-label" style="margin-top:22px;">これまでの連絡と、運営からの返信</div>
+      <div id="ct-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 規約への同意（まだの人・規約が変わったとき） ===================== -->
+<div class="sheet-overlay" id="sheet-terms" data-sticky="1">
+  <div class="sheet">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><div><div class="sheet-title">利用規約とプライバシーポリシー</div><div class="sheet-sub">使い続ける前に、一度だけ確認してください</div></div></div>
+    <div class="sheet-body terms-box">
+      <p>ソノサポに<a href="legal.html#terms" target="_blank" rel="noopener">利用規約</a>・<a href="legal.html#privacy" target="_blank" rel="noopener">プライバシーポリシー</a>・<a href="legal.html#safety" target="_blank" rel="noopener">安全についての正直なお知らせ</a>ができました（または内容が変わりました）。</p>
+      <p style="margin-top:10px;">ソノサポは学生が手作りで運営しています。最善を尽くしていますが、情報が絶対に漏れないとは約束できません。<b>万一漏れたら困る情報は載せないでください。</b>エコー画像が漏れるのが不安な方は、画像のアップロード（認定アプリの使用）を控えてください。</p>
+      <p style="margin-top:10px;">投稿のルール：実習中の患者さんの画像は投稿しない／練習台になった人が誰か分かることを書かない／資料はソノサポ内限定。</p>
+      <label class="check"><input type="checkbox" id="tm-agree"><span>利用規約とプライバシーポリシーに同意し、安全についてのお知らせを読みました</span></label>
+      <div class="msg" id="tm-msg"></div>
+      <button class="btn block" style="margin-top:12px;" id="tm-btn">同意して使う</button>
+      <div class="hint" style="text-align:center;margin-top:12px;">同意できない場合は、「アカウント」→「退会する」から退会できます。</div>
     </div>
   </div>
 </div>
@@ -493,6 +568,7 @@ SS.$('#join-btn').onclick = async () => {
   const year = _role === 'reviewer' ? 8 : (parseInt(SS.$('#j-year').value, 10) || null);
   SS.msg('join-msg');
   if(!name){ SS.msg('join-msg', '名前を入力してください。'); return; }
+  if(!SS.$('#j-agree').checked){ SS.msg('join-msg', '利用規約とプライバシーポリシーへの同意にチェックを入れてください。'); return; }
   btn.disabled = true; btn.textContent = '参加しています…';
   try{
     // この端末用のアカウントを作る（メールもパスワードも不要。次からは自動でログイン）
@@ -502,7 +578,7 @@ SS.$('#join-btn').onclick = async () => {
       if(error) throw error;
       session = data.session;
     }
-    const { error } = await sb.rpc('redeem_invite', { p_code: _code, p_name: name, p_year: year });
+    const { error } = await sb.rpc('redeem_invite', { p_code: _code, p_name: name, p_year: year, p_terms: window.SS_CONFIG.TERMS_VERSION });
     if(error) throw error;
     location.replace('index.html');
   }catch(e){
@@ -555,6 +631,14 @@ async function loadHome(){
   sb.from('stories').select('id', { count: 'exact', head: true }).then(({ count }) => {
     SS.$('#story-count').textContent = 'エピソード ' + (count || 0) + '件';
   });
+  // 前に「エコー部立ち上げ」を開いたあとに出た、新しい相談の数
+  let seen = null; try{ seen = localStorage.getItem('ss_launch_seen'); }catch(e){}
+  let cq = sb.from('stories').select('id', { count: 'exact', head: true }).eq('kind', 'consult').eq('is_resolved', false);
+  if(seen) cq = cq.gt('created_at', seen);
+  cq.then(({ count }) => {
+    const el = SS.$('#consult-new');
+    if(count > 0){ el.textContent = (seen ? '💬 新しい相談 ' : '💬 相談 ') + count; el.classList.remove('hidden'); }
+  });
   refreshBell();
 }
 
@@ -605,9 +689,16 @@ async function loadUnis(){
   const { data } = await sb.from('universities').select('id,name,short_name,group_name,prefecture').order('sort_order');
   UNIS = data || []; return UNIS;
 }
+let NTF_UNREAD = 0;
 async function refreshBell(){
   const last = SS.me.last_announcement_read_at || '1970-01-01T00:00:00Z';
-  const { count } = await sb.from('announcements').select('id', { count: 'exact', head: true }).gt('created_at', last);
+  const [{ count: a }, { count: n }] = await Promise.all([
+    sb.from('announcements').select('id', { count: 'exact', head: true }).gt('created_at', last),
+    sb.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null),
+  ]);
+  NTF_UNREAD = n || 0;
+  const nb = SS.$('#ntf-n'); nb.textContent = NTF_UNREAD > 9 ? '9+' : NTF_UNREAD; nb.classList.toggle('hidden', !NTF_UNREAD);
+  const count = (a || 0) + NTF_UNREAD;
   let b = SS.$('#bell .dot-badge');
   if(count > 0){ if(!b){ b = document.createElement('span'); b.className = 'dot-badge'; SS.$('#bell').appendChild(b); } b.textContent = count > 9 ? '9+' : count; }
   else if(b) b.remove();
@@ -631,7 +722,7 @@ async function loadAnn(){
     return `<div class="ann"><div class="ann-route">${from}<span class="ann-to">→ ${to}</span></div>
       <div class="text-body" style="font-size:13.5px;">${SS.linkify(a.body)}</div>
       <div class="ann-meta"><span>${SS.esc(a.author_name || '')} ・ ${SS.fmtDate(a.created_at)}</span>
-      ${(mine || SS.isAdmin()) ? `<button class="btn danger sm" data-del="${a.id}">削除</button>` : ''}</div></div>`;
+      <span style="display:flex;gap:6px;">${(mine || SS.isAdmin()) ? `<button class="btn danger sm" data-del="${a.id}">削除</button>` : ''}${!mine ? SS.reportBtn('announcements', a.id) : ''}</span></div></div>`;
   }).join('');
   list.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
     if(!confirm('このお知らせを削除しますか？')) return;
@@ -643,8 +734,33 @@ async function loadAnn(){
 function annTab(t){
   SS.$$('#ann-tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   SS.$('#ann-read').classList.toggle('hidden', t !== 'read');
+  SS.$('#ann-ntf').classList.toggle('hidden', t !== 'ntf');
   SS.$('#ann-write').classList.toggle('hidden', t !== 'write');
   if(t === 'write') drawAnnForm();
+  if(t === 'ntf') loadNtf();
+}
+// あなたへの通知（自分の相談・エピソードへの回答やコメント）
+async function loadNtf(){
+  const list = SS.$('#ntf-list');
+  list.innerHTML = '<div class="loading">読み込み中</div>';
+  const { data, error } = await sb.from('notifications').select('*').order('created_at', { ascending: false }).limit(50);
+  if(error){ list.innerHTML = '<div class="empty">読み込めませんでした</div>'; return; }
+  list.innerHTML = (data || []).map(n => `<a class="ntf${n.read_at ? '' : ' unread'}" href="${SS.esc(n.url || ('launch.html#story-' + (n.ref_id || '')))}">
+      <div class="t">${SS.esc(n.title)}</div><div class="b">${SS.esc(n.body || '')}</div><div class="m">${SS.ago(n.created_at)}</div></a>`).join('')
+    || '<div class="empty">まだ通知はありません。<br>質問・相談・エピソードに回答やコメントがつくと、ここに届きます。</div>';
+  SS.push.state().then(st => {
+    if(st !== 'off' && st !== 'install') return;
+    const box = document.createElement('div'); box.className = 'ntf'; box.style.cursor = 'default';
+    box.innerHTML = st === 'install'
+      ? '<div class="t">📲 スマホのロック画面にも通知を出せます</div><div class="b">iPhone では、ホーム画面に追加したソノサポのアイコンから開くと設定できます。</div>'
+      : '<div class="t">🔔 スマホのロック画面にも通知を出せます</div><div class="b">LINE のように、回答がついたらすぐ分かります。</div><button class="btn sm" style="margin-top:8px;" id="ntf-push">通知を受け取る</button>';
+    list.prepend(box);
+    const b = SS.$('#ntf-push'); if(b) b.onclick = async () => { try{ await SS.push.enable(); box.remove(); SS.toast('設定しました'); }catch(e){ SS.toast(SS.friendly(e)); } };
+  }).catch(() => {});
+  if((data || []).some(n => !n.read_at)){
+    await sb.from('notifications').update({ read_at: new Date().toISOString() }).is('read_at', null);
+    refreshBell();
+  }
 }
 SS.$$('#ann-tabs button').forEach(b => b.onclick = () => annTab(b.dataset.t));
 async function drawAnnForm(){
@@ -672,8 +788,8 @@ SS.$$('#ann-to button').forEach(b => b.onclick = () => {
 });
 SS.$('#ann-uq').addEventListener('input', drawUniPick);
 SS.$('#bell').onclick = async () => {
-  SS.openSheet('sheet-ann'); annTab('read');
-  await loadAnn();
+  SS.openSheet('sheet-ann');
+  if(NTF_UNREAD > 0){ annTab('ntf'); loadAnn(); } else { annTab('read'); await loadAnn(); }
   const now = new Date().toISOString();
   await sb.from('profiles').update({ last_announcement_read_at: now }).eq('id', SS.user.id);
   SS.me.last_announcement_read_at = now; refreshBell();
@@ -702,12 +818,56 @@ SS.$('#ann-btn').onclick = async () => {
 })();
 
 // ================================================================
+// 運営に連絡
+// ================================================================
+const CT_LABEL = { security: '安全上の問題', bug: '不具合', question: '質問・相談', delete: '削除の依頼', other: 'その他' };
+async function openContact(){
+  SS.msg('ct-msg'); SS.openSheet('sheet-contact');
+  const list = SS.$('#ct-list'); list.innerHTML = '<div class="loading"></div>';
+  const { data } = await sb.from('contacts').select('*').eq('user_id', SS.user.id).order('created_at', { ascending: false }).limit(20);
+  list.innerHTML = (data || []).map(c => `<div class="ct-item"><div class="m">${SS.esc(CT_LABEL[c.category] || '')} ・ ${SS.fmtDate(c.created_at)}${c.status === 'done' ? ' ・ 対応済み' : ''}</div>
+      <div class="q">${SS.esc(c.body)}</div>${c.reply ? `<div class="a"><b>運営より：</b>${SS.esc(c.reply)}</div>` : ''}</div>`).join('')
+    || '<div class="hint">まだ送った連絡はありません。</div>';
+}
+SS.$('#ct-send').onclick = async () => {
+  const btn = SS.$('#ct-send'), body = SS.$('#ct-body').value.trim();
+  SS.msg('ct-msg');
+  if(!body){ SS.msg('ct-msg', '内容を入力してください。'); return; }
+  btn.disabled = true;
+  const { error } = await sb.from('contacts').insert({ category: SS.$('#ct-cat').value, body });
+  btn.disabled = false;
+  if(error){ SS.msg('ct-msg', SS.friendly(error)); return; }
+  SS.$('#ct-body').value = '';
+  SS.msg('ct-msg', '送りました。運営から返信があると、ベルに通知が届きます。', 'ok');
+  openContact();
+};
+
+// ================================================================
+// 規約への同意（まだ同意していない人・規約の版が変わったとき）
+// ================================================================
+function checkTerms(){
+  const v = window.SS_CONFIG.TERMS_VERSION;
+  if(!SS.me || !v || SS.me.terms_version === v) return;
+  SS.openSheet('sheet-terms');
+}
+SS.$('#tm-btn').onclick = async () => {
+  if(!SS.$('#tm-agree').checked){ SS.msg('tm-msg', 'チェックを入れてください。'); return; }
+  const v = window.SS_CONFIG.TERMS_VERSION, now = new Date().toISOString();
+  const { error } = await sb.from('profiles').update({ terms_version: v, terms_accepted_at: now }).eq('id', SS.user.id);
+  if(error){ SS.msg('tm-msg', SS.friendly(error)); return; }
+  SS.me.terms_version = v; SS.closeSheet('sheet-terms');
+};
+
+// ================================================================
 // 起動
 // ================================================================
 SS.boot({ requireProfile: false }).then(() => {
   if(SS.me){
     SS.$('#home').classList.add('on');
     loadHome();
+    setTimeout(checkTerms, 700);
+    if(location.hash === '#contact') setTimeout(openContact, 800);
+    window.addEventListener('hashchange', () => { if(location.hash === '#contact'){ SS.closeSheet('sheet-ann'); openContact(); } });
   } else {
     SS.$('#join').classList.add('on');
     // URL に ?code=XXXX-XXXX が付いていたら、自動で入れておく（招待リンク用）

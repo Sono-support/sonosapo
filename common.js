@@ -11,6 +11,8 @@
   // 読み込み中は中身を隠し、紺色の幕だけ見せる（チラつき防止）
   const root = document.documentElement;
   root.classList.add('ss-boot');
+  // 前のページから車の幕でやってきたときは、読み込み中の背景も黒にしておく（紺色が一瞬見えてチカッとするのを防ぐ）
+  try { const k = sessionStorage.getItem('ss_nav'); if (k && k !== 'doc') root.classList.add('ss-boot-car'); } catch (e) {}
   // iPad をホーム画面から開いたとき：画面のいちばん上は iPadOS が「ぼかし」をかける帯になる。
   // そこに文字が入るとボヤけるので、上の余白を最低64px確保する（CSS の --ss-top）。
   try {
@@ -20,6 +22,29 @@
     if (isIPad) root.classList.add('ss-ipad');
     if (standalone) root.classList.add('ss-standalone');
   } catch (e) {}
+  // iPhone をホーム画面から開いたとき、iOS が「表示できる範囲」を実際の画面より短く計算して、
+  // 下のタブバーが浮き、その下に隙間ができることがある（iOS 側の不具合）。
+  // 実際の画面の高さとの差（＝隙間）を測って、タブバーなどをその分だけ下へずらす（CSS の --ss-gap）。
+  function fitGap(){
+    let gap = 0;
+    try {
+      const ua = navigator.userAgent || '';
+      const iphone = /iPhone|iPod/.test(ua);
+      const standalone = !!navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+      const portrait = window.innerHeight > window.innerWidth;
+      if (iphone && standalone && portrait) {
+        const screenH = Math.max(screen.height, screen.width);
+        const d = Math.round(screenH - window.innerHeight);
+        if (d > 0 && d < 160) gap = d;
+      }
+    } catch (e) {}
+    root.style.setProperty('--ss-gap', gap + 'px');
+    window.SS_GAP = gap;
+  }
+  fitGap();
+  ['load', 'resize', 'orientationchange', 'pageshow'].forEach(ev => window.addEventListener(ev, () => { fitGap(); setTimeout(fitGap, 300); }));
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(fitGap, 100); });
+  window.SS_fitGap = fitGap;
 })();
 
 // パスワード再設定メールのリンクから来たかどうか（Supabase がURLを消す前に覚えておく）
@@ -51,6 +76,8 @@ SS.univLabel = () => {
 
 // ---------------- 小さな道具 ----------------
 SS.esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// リンクとして開いてよいのは http:// と https:// だけ（javascript: などの危ないリンクを防ぐ）
+SS.safeUrl = u => /^https?:\/\/[^\s"'<>`]+$/i.test(String(u || ''));
 SS.$ = (sel, root) => (root || document).querySelector(sel);
 SS.$$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
 SS.pad = n => String(n).padStart(2, '0');
@@ -156,7 +183,7 @@ const _urlCache = {};
 SS.signedUrls = async (paths, bucket = 'posts') => {
   const need = [...new Set(paths)].filter(p => p && !_urlCache[bucket + p]);
   if(need.length){
-    const { data } = await sb.storage.from(bucket).createSignedUrls(need, 3600 * 6);
+    const { data } = await sb.storage.from(bucket).createSignedUrls(need, 3600);
     (data || []).forEach(x => { if(x && x.signedUrl) _urlCache[bucket + x.path] = x.signedUrl; });
   }
   const out = {}; paths.forEach(p => { if(_urlCache[bucket + p]) out[p] = _urlCache[bucket + p]; });
@@ -289,6 +316,8 @@ function bootCurtain(){
   else _bootCurtain = makeCurtain('doc', 'enter');   // アプリを開いたとき
   return _bootCurtain;
 }
+// 各ページの <body> の直後で呼ぶ：中身より先に幕を出しておく（遅れて出るとチカッとして見える）
+SS.earlyCurtain = () => { if(document.body && document.documentElement.classList.contains('ss-boot')) bootCurtain(); };
 document.addEventListener('DOMContentLoaded', () => {
   if(document.documentElement.classList.contains('ss-boot')) bootCurtain();
 });
@@ -299,7 +328,7 @@ SS.reveal = (minMs = 0) => {
     let c = document.getElementById('ss-curtain') || bootCurtain();
     const kind = c.dataset.kind;
     c.className = c.className.replace(/\benter\b/, '').trim();
-    document.documentElement.classList.remove('ss-boot');
+    document.documentElement.classList.remove('ss-boot', 'ss-boot-car');
     requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add('leave')));
     setTimeout(() => c.remove(), kind === 'doc' ? 620 : 760);
     // 次の移動にそなえて、SS-7 の画像を先に読み込んでおく
@@ -345,6 +374,10 @@ SS.boot = async (opts = {}) => {
   if(SS.user){
     const { data: prof } = await sb.from('profiles').select('*').eq('id', SS.user.id).maybeSingle();
     SS.me = prof || null;
+    // 最後に使った日（2年以上使われていないアカウントの整理に使う）。半日に1回だけ記録する
+    if(SS.me && (!SS.me.last_seen_at || Date.now() - new Date(SS.me.last_seen_at).getTime() > 12 * 3600e3)){
+      sb.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', SS.user.id).then(() => {}, () => {});
+    }
     if(SS.me && SS.me.university_id){
       const { data: u } = await sb.from('universities').select('*').eq('id', SS.me.university_id).maybeSingle();
       SS.univ = u || null;
@@ -381,6 +414,127 @@ SS.tabbar = (active) => {
   document.body.classList.add('has-tabbar');
   SS.refreshChatBadge();
 };
+SS.showDiag = () => {
+  if (document.getElementById('ss-diag')) return;
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;top:0;left:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);visibility:hidden;';
+  document.body.appendChild(probe);
+  const cs = getComputedStyle(probe), top = cs.paddingTop, bottom = cs.paddingBottom; probe.remove();
+  const tb = document.querySelector('.tabbar'), r = tb ? tb.getBoundingClientRect() : null;
+  const lines = [
+    'ソノサポ 版: ' + (window.SS_CONFIG && window.SS_CONFIG.APP_VERSION),
+    '表示範囲: ' + innerWidth + ' x ' + innerHeight,
+    '画面(端末): ' + screen.width + ' x ' + screen.height,
+    '上の余白: ' + top + ' ／ 下の余白: ' + bottom,
+    '隙間の補正: ' + (window.SS_GAP || 0) + 'px',
+    'タブバーの下端: ' + (r ? Math.round(r.bottom) : '-'),
+    'ホーム画面から起動: ' + (SS.isStandalone() ? 'はい' : 'いいえ'),
+    '端末: ' + (navigator.userAgent.match(/(iPhone|iPad|Android)[^;)]*/) || ['不明'])[0],
+  ];
+  const d = document.createElement('div'); d.id = 'ss-diag';
+  d.innerHTML = `<div class="box"><b>表示の診断</b><pre>${SS.esc(lines.join('\n'))}</pre><div class="hint" style="margin:0 0 10px;">このまま画面を撮って送ってください。</div><button class="btn sm">閉じる</button></div>`;
+  d.querySelector('button').onclick = () => d.remove();
+  document.body.appendChild(d);
+};
+// ---------------- プッシュ通知（スマホのロック画面に届く通知） ----------------
+// しくみ：この端末の「宛先」を Supabase に登録 → 通知が作られると、Supabase の Edge Function が宛先へ送る
+SS.push = {
+  _key: null,
+  supported(){ return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; },
+  needsInstall(){ return SS.device() === 'ios' && !SS.isStandalone(); },   // iPhone はホーム画面に追加したアプリでだけ使える
+  async key(){
+    if(SS.push._key) return SS.push._key;
+    const { data } = await sb.from('app_settings').select('value').eq('key', 'vapid_public_key').maybeSingle();
+    return (SS.push._key = data && data.value || null);
+  },
+  _u8(b64){ const pad = '='.repeat((4 - b64.length % 4) % 4); const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(raw, c => c.charCodeAt(0)); },
+  async current(){ if(!SS.push.supported()) return null; const reg = await navigator.serviceWorker.ready; return reg.pushManager.getSubscription(); },
+  // いまの状態：'unsupported' | 'install' | 'denied' | 'on' | 'off' | 'notready'
+  async state(){
+    if(SS.push.needsInstall()) return 'install';
+    if(!SS.push.supported()) return 'unsupported';
+    if(Notification.permission === 'denied') return 'denied';
+    const key = await SS.push.key(); if(!key) return 'notready';
+    const sub = await SS.push.current();
+    if(!sub) return 'off';
+    // 運営が鍵を作り直していたら、登録し直す
+    const cur = sub.options && sub.options.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null;
+    const want = SS.push._u8(key);
+    if(cur && (cur.length !== want.length || cur.some((v, i) => v !== want[i]))){ await sub.unsubscribe(); return 'off'; }
+    return 'on';
+  },
+  // ボタンを押したときに呼ぶ（iPhone では、押した直後に許可を求めないと許可の画面が出ないため、最初に聞く）
+  async enable(){
+    const perm = Notification.requestPermission();
+    const key = await SS.push.key();
+    if(!key) throw new Error('運営がまだプッシュ通知の準備をしていません。');
+    if(await perm !== 'granted') throw new Error('通知が許可されませんでした。端末の「設定」→「通知」から、ソノサポの通知を許可してください。');
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: SS.push._u8(key) });
+    const j = sub.toJSON();
+    const { error } = await sb.rpc('save_push_subscription', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth });
+    if(error) throw error;
+  },
+  async disable(){
+    const sub = await SS.push.current(); if(!sub) return;
+    await sb.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+    await sub.unsubscribe();
+  },
+};
+
+// ---------------- 通報（問題のある投稿を運営に知らせる） ----------------
+// 使い方：投稿の横に SS.reportBtn('threads', id) のボタンを置くだけ（押すと通報の画面が出る）
+SS.REPORT_REASONS = [
+  '患者さんの情報（名前・ID・病院名・顔など）が写っている',
+  '練習台になった人が誰か分かる',
+  '著作権の問題がありそう（他人の資料・図の無断掲載）',
+  '誹謗中傷・差別・不快な内容',
+  '宣伝・勧誘・スパム',
+  'その他',
+];
+SS.reportBtn = (table, id) => `<button type="button" class="mini-btn" data-report="${SS.esc(table)}:${SS.esc(id)}" title="運営に知らせる">⚑ 通報</button>`;
+SS.report = (table, id) => {
+  let ov = document.getElementById('sheet-report');
+  if(!ov){
+    ov = document.createElement('div');
+    ov.className = 'sheet-overlay'; ov.id = 'sheet-report'; ov.dataset.sticky = '1'; ov.style.zIndex = '800';
+    ov.innerHTML = `<div class="sheet"><div class="sheet-grab"></div>
+      <div class="sheet-head"><div><div class="sheet-title">通報する</div><div class="sheet-sub">運営（管理者）だけに届きます。投稿した人には、誰が通報したかは分かりません</div></div><button class="sheet-close" data-close="sheet-report">✕</button></div>
+      <div class="sheet-body">
+        <label class="label" style="margin-top:0;">理由</label>
+        <div id="rp-reasons">${SS.REPORT_REASONS.map((r, i) => `<label class="check" style="margin-top:8px;color:var(--text);"><input type="radio" name="rp-r" value="${i}"><span>${SS.esc(r)}</span></label>`).join('')}</div>
+        <label class="label">くわしく（任意）</label>
+        <textarea class="field" id="rp-note" maxlength="300" style="min-height:70px;" placeholder="どこが問題か、など"></textarea>
+        <div class="msg" id="rp-msg"></div>
+        <button class="btn block" style="margin-top:12px;" id="rp-send">運営に知らせる</button>
+      </div></div>`;
+    document.body.appendChild(ov);
+  }
+  SS.$$('#rp-reasons input').forEach(i => i.checked = false);
+  SS.$('#rp-note').value = ''; SS.msg('rp-msg');
+  SS.$('#rp-send').onclick = async () => {
+    const sel = SS.$('#rp-reasons input:checked');
+    if(!sel){ SS.msg('rp-msg', '理由を選んでください。'); return; }
+    const note = SS.$('#rp-note').value.trim();
+    const reason = SS.REPORT_REASONS[+sel.value] + (note ? '：' + note : '');
+    const btn = SS.$('#rp-send'); btn.disabled = true;
+    const { error } = await sb.from('reports').insert({ target_table: table, target_id: id, reason });
+    btn.disabled = false;
+    if(error){
+      if(/duplicate|unique/i.test(error.message || '')){ SS.closeSheet('sheet-report'); SS.toast('この投稿はすでに通報済みです。ありがとうございます'); return; }
+      SS.msg('rp-msg', SS.friendly(error)); return;
+    }
+    SS.closeSheet('sheet-report'); SS.toast('運営に知らせました。ありがとうございます');
+  };
+  SS.openSheet('sheet-report');
+};
+document.addEventListener('click', ev => {
+  const b = ev.target.closest && ev.target.closest('[data-report]'); if(!b) return;
+  ev.preventDefault(); ev.stopPropagation();
+  const [t, id] = b.dataset.report.split(':'); SS.report(t, id);
+}, true);
+
 // チャットの新着（この端末で前に見たときより返信が増えた質問の数）
 SS.SEEN_KEY = 'ss_seen_v1';
 SS.getSeen = () => { try{ return JSON.parse(localStorage.getItem(SS.SEEN_KEY) || '{}'); }catch(e){ return {}; } };

@@ -2,6 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<!-- 安全のための決まり：このアプリが読み込んでよい場所を、自分のサイト・Supabase・Googleフォントだけに限る -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://gurbkfenumknfdnzxiuo.supabase.co; connect-src 'self' https://gurbkfenumknfdnzxiuo.supabase.co wss://gurbkfenumknfdnzxiuo.supabase.co; media-src 'self' blob: https://gurbkfenumknfdnzxiuo.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>カレンダー | ソノサポ</title>
 <link rel="manifest" href="manifest.json">
@@ -13,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="vendor/supabase-js-2.117.3.js"></script>
 <script src="config.js"></script>
 <script src="common.js"></script>
 <style>
@@ -65,6 +67,7 @@
 </style>
 </head>
 <body>
+<script>SS.earlyCurtain();</script>
 
 <div class="page-head">
   <div><div class="page-title">カレンダー</div><div class="page-sub">PSMA ・ 大学間交流 ・ 学内の予定</div></div>
@@ -206,10 +209,11 @@ async function openDetail(id){
     ${e.event_time ? `<div class="d-row"><span class="ic">🕐</span>${SS.esc(e.event_time)}</div>` : ''}
     ${e.location ? `<div class="d-row"><span class="ic">📍</span>${SS.esc(e.location)}</div>` : ''}
     ${e.capacity ? `<div class="d-row"><span class="ic">👥</span>定員 ${e.capacity}人</div>` : ''}
-    ${e.url ? `<div class="d-row"><span class="ic">🔗</span><a href="${SS.esc(e.url)}" target="_blank" rel="noopener" style="color:var(--orange-light);word-break:break-all;">${SS.esc(e.url)}</a></div>` : ''}
+    ${SS.safeUrl(e.url) ? `<div class="d-row"><span class="ic">🔗</span><a href="${SS.esc(e.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--orange-light);word-break:break-all;">${SS.esc(e.url)}</a></div>` : ''}
     ${e.description ? `<div class="d-desc text-body" style="font-size:13px;">${SS.linkify(e.description)}</div>` : ''}
     <div class="hint">登録：${SS.esc(e.created_by_name || '')}${e.created_by_univ ? '（' + SS.esc(e.created_by_univ) + '）' : ''}</div>
     ${(mine || SS.isAdmin()) ? `<div style="display:flex;gap:8px;margin-top:12px;"><button class="btn ghost sm" id="d-edit">編集</button><button class="btn danger sm" id="d-del">削除</button></div>` : ''}
+    ${!mine ? `<div style="margin-top:10px;">${SS.reportBtn('events', e.id)}</div>` : ''}
     <div class="d-sec"><div class="d-sec-h"><span>参加</span><span id="att-count" class="mono" style="font-size:11px;color:var(--muted);"></span></div><div id="att-box"><div class="loading"></div></div></div>
     <div class="d-sec"><div class="d-sec-h">感想・学んだこと</div><div id="imp-list"><div class="loading"></div></div>
       <textarea class="field" id="imp-text" maxlength="1000" placeholder="どんな会だったか、学んだことを残そう" style="min-height:70px;"></textarea>
@@ -248,7 +252,7 @@ async function loadImps(e){
   await SS.loadOwned();
   const { data } = await sb.from('event_impressions').select('*').eq('event_id', e.id).order('created_at');
   SS.$('#imp-list').innerHTML = (data || []).map(r => `<div class="imp"><div class="au">${SS.authorHtml(r)}<span class="au-time">${SS.ago(r.created_at)}</span></div>
-    <div class="text-body">${SS.linkify(r.body)}</div>${(SS.owns(r.id) || SS.isAdmin()) ? `<button class="btn ghost sm" style="margin-top:6px;" data-delimp="${r.id}">削除</button>` : ''}</div>`).join('')
+    <div class="text-body">${SS.linkify(r.body)}</div><div style="display:flex;gap:6px;margin-top:6px;">${(SS.owns(r.id) || SS.isAdmin()) ? `<button class="btn ghost sm" data-delimp="${r.id}">削除</button>` : ''}${!SS.owns(r.id) ? SS.reportBtn('event_impressions', r.id) : ''}</div></div>`).join('')
     || '<div class="hint" style="margin:0 0 8px;">まだありません</div>';
   SS.$$('[data-delimp]').forEach(b => b.onclick = async () => { if(!confirm('削除しますか？')) return; await sb.from('event_impressions').delete().eq('id', b.dataset.delimp); loadImps(e); });
 }

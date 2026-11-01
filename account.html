@@ -2,6 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<!-- 安全のための決まり：このアプリが読み込んでよい場所を、自分のサイト・Supabase・Googleフォントだけに限る -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://gurbkfenumknfdnzxiuo.supabase.co; connect-src 'self' https://gurbkfenumknfdnzxiuo.supabase.co wss://gurbkfenumknfdnzxiuo.supabase.co; media-src 'self' blob: https://gurbkfenumknfdnzxiuo.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>アカウント | ソノサポ</title>
 <link rel="manifest" href="manifest.json">
@@ -13,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="vendor/supabase-js-2.117.3.js"></script>
 <script src="config.js"></script>
 <script src="common.js"></script>
 <style>
@@ -30,6 +32,7 @@
 </style>
 </head>
 <body>
+<script>SS.earlyCurtain();</script>
 
 <div class="page-head">
   <div><a class="back" href="index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>ホーム</a>
@@ -57,7 +60,7 @@
     <label class="label">名前</label>
     <input class="field" id="p-name" maxlength="30">
     <div id="p-year-wrap"><label class="label">学年</label><select class="field" id="p-year"></select></div>
-    <div class="hint">これから投稿するものに使われます（これまでの投稿の名前は変わりません）。</div>
+    <div class="hint">チャットなどに投稿したときに、全国の参加者に表示されます。<b style="color:var(--text);">本名でなくてもOK</b>（ニックネーム可）。これから投稿するものに使われます（これまでの投稿の名前は変わりません）。</div>
     <div class="msg" id="p-msg"></div>
     <button class="btn" style="margin-top:12px;" id="p-save">保存する</button>
   </div>
@@ -91,12 +94,37 @@
 
   <a class="row-link hidden" id="admin-link" href="admin.html"><div class="row-ic">⚙️</div><div class="row-body"><div class="row-title">管理画面</div><div class="row-desc">大学・招待コード・ラベル</div></div></a>
 
+  <div class="box" id="push-box">
+    <h2>スマホに通知を受け取る（プッシュ通知）</h2>
+    <div class="hint">自分の質問・相談に回答がついたときなどに、LINE のようにロック画面へ通知が届きます。<b style="color:var(--text);">この端末だけ</b>の設定です。</div>
+    <div class="msg show info" id="push-state" style="margin-top:10px;">確認しています…</div>
+    <button class="btn" style="margin-top:12px;" id="push-on">通知を受け取る</button>
+    <button class="btn ghost" style="margin-top:12px;" id="push-off">通知を止める</button>
+    <div class="msg" id="push-msg"></div>
+  </div>
+
   <div class="box">
     <h2>ログアウト</h2>
     <div class="hint" id="logout-hint"></div>
     <button class="btn danger" style="margin-top:12px;" id="logout">ログアウトする</button>
   </div>
-  <div class="hint" style="text-align:center;margin-bottom:20px;" id="ver"></div>
+  <div class="box" id="leave-box" style="border-color:rgba(240,96,96,.35);">
+    <h2>退会する</h2>
+    <div class="hint">退会すると、次のものが<b style="color:var(--text);">すぐに削除され、元に戻せません</b>。</div>
+    <ul style="font-size:12.5px;color:var(--muted);line-height:1.9;margin:6px 0 0 1.2em;">
+      <li>名前・学年などのプロフィール</li>
+      <li>認定アプリの記録と、提出したエコー画像</li>
+      <li>あなたへの通知、ログイン情報</li>
+    </ul>
+    <div class="hint" style="margin-top:8px;">チャットの質問・回答、エピソード、コメントなどの投稿は、他の人の役に立つので、名前を「<b style="color:var(--text);">退会したメンバー</b>」に変えて残ります。消したい投稿は、先にご自身で削除してください。</div>
+    <label class="label">確認のため「退会」と入力してください</label>
+    <input class="field" id="leave-word" autocomplete="off" placeholder="退会">
+    <div class="msg" id="leave-msg"></div>
+    <button class="btn danger" style="margin-top:12px;" id="leave-btn">退会する</button>
+  </div>
+  <div class="hint" style="text-align:center;margin-bottom:6px;" id="ver"></div>
+  <div style="text-align:center;margin-bottom:8px;"><a href="legal.html" style="font-size:11.5px;color:var(--muted);">規約とポリシー・安全について</a></div>
+  <button type="button" class="join-link" style="display:block;margin:0 auto 24px;background:none;border:none;color:var(--dim);font-size:11.5px;text-decoration:underline;" onclick="SS.showDiag()">表示がおかしいとき：表示の診断</button>
 </div>
 
 <script>
@@ -162,8 +190,70 @@ SS.$('#logout').onclick = async () => {
   location.replace('index.html');
 };
 
+// ---------- プッシュ通知 ----------
+const PUSH_TEXT = {
+  install: 'iPhone では、ホーム画面に追加したソノサポのアイコンから開いたときだけ設定できます。',
+  unsupported: 'この端末・ブラウザはプッシュ通知に対応していません。',
+  denied: '通知がブロックされています。端末の「設定」→「通知」から、ソノサポの通知を許可してください。',
+  notready: '運営がプッシュ通知の準備をしているところです。もう少しお待ちください。',
+  on: '✓ この端末で通知を受け取っています。',
+  off: 'いまは通知を受け取っていません。',
+};
+async function drawPush(){
+  let st = 'unsupported';
+  try{ st = await SS.push.state(); }catch(e){}
+  const el = SS.$('#push-state');
+  el.textContent = PUSH_TEXT[st]; el.className = 'msg show ' + (st === 'on' ? 'ok' : 'info');
+  SS.$('#push-on').classList.toggle('hidden', st !== 'off');
+  SS.$('#push-off').classList.toggle('hidden', st !== 'on');
+}
+SS.$('#push-on').onclick = async () => {
+  SS.msg('push-msg');
+  try{ await SS.push.enable(); SS.msg('push-msg', '設定しました。', 'ok'); }
+  catch(e){ SS.msg('push-msg', SS.friendly(e)); }
+  drawPush();
+};
+SS.$('#push-off').onclick = async () => {
+  try{ await SS.push.disable(); }catch(e){}
+  drawPush();
+};
+
+// ---------- 退会 ----------
+// 認定アプリの画像（cert-images の自分のフォルダ）を全部消してから、データベースの退会処理を呼ぶ
+async function listAll(bucket, prefix, depth){
+  const out = [];
+  const { data } = await sb.storage.from(bucket).list(prefix, { limit: 1000 });
+  for(const f of data || []){
+    const path = prefix + '/' + f.name;
+    if(f.id) out.push(path);                                   // ファイル
+    else if(depth > 0) out.push(...await listAll(bucket, path, depth - 1));   // フォルダ
+  }
+  return out;
+}
+SS.$('#leave-btn').onclick = async () => {
+  SS.msg('leave-msg');
+  if(SS.isAdmin()){ SS.msg('leave-msg', '管理者アカウントは、ここからは退会できません。'); return; }
+  if(SS.$('#leave-word').value.trim() !== '退会'){ SS.msg('leave-msg', '確認のため「退会」と入力してください。'); return; }
+  if(!confirm('本当に退会しますか？\nプロフィールと認定アプリの記録・画像は削除され、元に戻せません。')) return;
+  const btn = SS.$('#leave-btn'); btn.disabled = true; btn.textContent = '退会しています…';
+  try{
+    try{ await SS.push.disable(); }catch(e){}
+    const paths = await listAll('cert-images', SS.user.id, 4);
+    for(let i = 0; i < paths.length; i += 100) await sb.storage.from('cert-images').remove(paths.slice(i, i + 100));
+    const { error } = await sb.rpc('delete_my_account');
+    if(error) throw error;
+    await sb.auth.signOut().catch(() => {});
+    try{ localStorage.clear(); sessionStorage.clear(); }catch(e){}
+    alert('退会しました。これまで使ってくださって、ありがとうございました。');
+    location.replace('index.html');
+  }catch(e){
+    SS.msg('leave-msg', SS.friendly(e)); btn.disabled = false; btn.textContent = '退会する';
+  }
+};
+
 SS.boot().then(() => {
-  fill(); SS.tabbar('home');
+  fill(); SS.tabbar('home'); drawPush();
+  SS.$('#leave-box').classList.toggle('hidden', SS.isAdmin());
   if(/type=recovery/.test(SS_INITIAL_HASH)) SS.$('#recover-box').classList.remove('hidden');
   sb.auth.onAuthStateChange(ev => { if(ev === 'PASSWORD_RECOVERY') SS.$('#recover-box').classList.remove('hidden'); });
   SS.reveal();

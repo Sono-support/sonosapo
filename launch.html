@@ -2,6 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<!-- 安全のための決まり：このアプリが読み込んでよい場所を、自分のサイト・Supabase・Googleフォントだけに限る -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://gurbkfenumknfdnzxiuo.supabase.co; connect-src 'self' https://gurbkfenumknfdnzxiuo.supabase.co wss://gurbkfenumknfdnzxiuo.supabase.co; media-src 'self' blob: https://gurbkfenumknfdnzxiuo.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>エコー部立ち上げ | ソノサポ</title>
 <link rel="manifest" href="manifest.json">
@@ -13,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="vendor/supabase-js-2.117.3.js"></script>
 <script src="config.js"></script>
 <script src="common.js"></script>
 <style>
@@ -38,12 +40,26 @@
 .kinds{margin:12px 0;}
 .story{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;cursor:pointer;position:relative;overflow:hidden;}
 .story::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;}
-.story.success::before{background:var(--ok);} .story.failure::before{background:#EF6B57;} .story.tip::before{background:var(--blue);}
+.story.success::before{background:var(--ok);} .story.failure::before{background:#EF6B57;} .story.tip::before{background:var(--blue);} .story.consult::before{background:var(--orange);}
 .st-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .kind{font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 9px;}
 .kind.success{background:rgba(108,197,138,.15);color:var(--ok);border:1px solid rgba(108,197,138,.4);}
 .kind.failure{background:rgba(239,107,87,.13);color:#F3A292;border:1px solid rgba(239,107,87,.4);}
 .kind.tip{background:rgba(90,167,232,.13);color:var(--blue);border:1px solid rgba(90,167,232,.4);}
+.kind.consult{background:var(--orange-bg);color:var(--orange-light);border:1px solid rgba(255,147,5,.45);}
+.cs-state{font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 8px;}
+.cs-state.wait{color:#0C0C0C;background:var(--orange);}
+.cs-state.got{color:var(--orange-light);border:1px solid rgba(255,147,5,.45);}
+.cs-state.done{color:#0C0C0C;background:var(--ok);}
+/* お悩み相談所 */
+.helpdesk{position:relative;overflow:hidden;margin:16px 0 4px;border-radius:18px;padding:16px;border:1px solid rgba(255,147,5,.45);
+  background:radial-gradient(120% 120% at 100% 0%, rgba(255,147,5,.18), transparent 60%), #17120B;}
+.helpdesk .k{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--orange-light);}
+.helpdesk .t{font-size:18px;font-weight:900;margin-top:4px;}
+.helpdesk .d{font-size:12px;color:#D9C9AE;line-height:1.75;margin-top:6px;}
+.helpdesk .row{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap;}
+.helpdesk .n{font-size:11.5px;color:var(--muted);}
+.helpdesk .n b{color:var(--orange-light);font-family:"JetBrains Mono",monospace;font-size:13px;}
 .cat-tag{font-size:10.5px;font-weight:700;color:var(--muted);border:1px solid var(--border-light);border-radius:999px;padding:1px 8px;}
 .st-title{font-size:15.5px;font-weight:800;line-height:1.45;margin-top:8px;}
 .st-ex{font-size:12.5px;color:var(--muted);line-height:1.75;margin-top:4px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
@@ -61,6 +77,7 @@
 .kind-pick button.on.success{border-color:var(--ok);color:var(--ok);background:rgba(108,197,138,.1);}
 .kind-pick button.on.failure{border-color:#EF6B57;color:#F3A292;background:rgba(239,107,87,.1);}
 .kind-pick button.on.tip{border-color:var(--blue);color:var(--blue);background:rgba(90,167,232,.1);}
+#w-kind-wrap.hidden{display:none;}
 .cat-pick{display:flex;flex-wrap:wrap;gap:6px;}
 .cat-pick button{border:1px solid var(--border-light);background:var(--black);color:var(--muted);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:700;}
 .cat-pick button.on{background:var(--orange);border-color:var(--orange);color:var(--black);}
@@ -71,18 +88,25 @@
 </style>
 </head>
 <body>
+<script>SS.earlyCurtain();</script>
 
 <header class="hero">
   <div class="hero-in">
     <a class="back" href="index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>ホーム</a>
     <div class="hero-k">02 ー BUILD YOUR CLUB</div>
     <div class="hero-t">エコー部<br>立ち上げ</div>
-    <div class="hero-d">全国の仲間の成功も失敗も、次の誰かの近道に。学習環境の整備、学び方、部員集め…ぜんぶ残していこう。</div>
+    <div class="hero-d">全国の仲間の成功も失敗も、次の誰かの近道に。学習環境の整備、部員集め、困りごとの相談…ぜんぶ残していこう。</div>
     <img class="hero-doc" src="assets/doctor.webp" alt="">
   </div>
 </header>
 
 <div class="wrap">
+  <div class="helpdesk">
+    <div class="k">HELP DESK</div>
+    <div class="t">💬 お悩み相談所</div>
+    <div class="d">立ち上げたばかりのエコー部の「困った」を、全国の先輩エコー部に相談できます。回答がつくと、ホームのベルに通知が届きます。</div>
+    <div class="row"><button class="btn sm" id="ask">相談する</button><span class="n" id="consult-n"></span></div>
+  </div>
   <div class="cats" id="cats"></div>
   <div class="kinds chips scroll" id="kinds"></div>
   <div id="list"><div class="loading">読み込み中</div></div>
@@ -109,20 +133,21 @@
 <div class="sheet-overlay" id="sheet-write" data-sticky="1">
   <div class="sheet">
     <div class="sheet-grab"></div>
-    <div class="sheet-head"><div><div class="sheet-title" id="w-head">エピソードを書く</div><div class="sheet-sub">あなたの経験が、どこかの大学の一歩になります</div></div><button class="sheet-close" data-close="sheet-write">✕</button></div>
+    <div class="sheet-head"><div><div class="sheet-title" id="w-head">エピソードを書く</div><div class="sheet-sub" id="w-sub">あなたの経験が、どこかの大学の一歩になります</div></div><button class="sheet-close" data-close="sheet-write">✕</button></div>
     <div class="sheet-body">
-      <label class="label" style="margin-top:0;">どんな話？</label>
-      <div class="kind-pick" id="w-kind"></div>
-      <label class="label">テーマ</label>
+      <div id="w-kind-wrap"><label class="label" style="margin-top:0;">どんな話？</label>
+      <div class="kind-pick" id="w-kind"></div></div>
+      <label class="label" id="w-cat-label">テーマ</label>
       <div class="cat-pick" id="w-cat"></div>
       <label class="label">タイトル <span class="req">*</span></label>
       <input class="field" id="w-title" maxlength="80" placeholder="例：卒業生の先生に相談して、中古のエコーを譲ってもらえた／空き教室を練習場所として借りられた">
       <label class="label">本文 <span class="req">*</span></label>
       <textarea class="field" id="w-body" maxlength="5000" style="min-height:180px;"></textarea>
-      <div class="tmpl">書き方に迷ったら：<br>①どんな状況だったか　②やったこと　③結果どうなったか　④次の人へのアドバイス
+      <div class="tmpl"><span id="w-tmpl-text">書き方に迷ったら：<br>①どんな状況だったか　②やったこと　③結果どうなったか　④次の人へのアドバイス</span>
         <br><button type="button" class="btn ghost sm" id="w-tmpl">この形で書き始める</button></div>
       <label class="label">画像（4枚まで）</label>
       <div class="img-picks" id="w-imgs"></div>
+      <div class="privacy hidden" id="w-privacy" style="background:rgba(255,147,5,.08);border:1px solid rgba(255,147,5,.35);border-radius:10px;padding:2px 12px 10px;margin-top:8px;"><label class="check" style="color:#FFD6A6;"><input type="checkbox" id="w-priv-ok">画像は練習画像だけで、患者さんの名前・ID・病院名・顔が写っておらず、練習台になった人が誰か分からないことを確認しました</label></div>
       <div class="msg" id="w-msg"></div>
       <button class="btn block" style="margin-top:14px;" id="w-send">投稿する</button>
     </div>
@@ -134,10 +159,18 @@
 // エコー部立ち上げ：成功・失敗・工夫のエピソード集
 // ================================================================
 const CATS = [
-  { k:'学習環境の整備', e:'🖥️', x:'機器の調達・練習場所の確保など' }, { k:'学び方', e:'📚' }, { k:'部員集め', e:'🙋' },
+  { k:'相談', e:'💬', x:'立ち上げの悩みを全国に相談' }, { k:'学習環境の整備', e:'🖥️', x:'機器の調達・練習場所の確保など' }, { k:'部員集め', e:'🙋' },
   { k:'指導医・大学', e:'🤝' }, { k:'運営・続け方', e:'🔁' }, { k:'その他', e:'💡' },
 ];
 const KINDS = { success: 'うまくいった', failure: '失敗から学んだ', tip: '工夫・アイデア' };
+const KIND_LABEL = Object.assign({ consult: 'お悩み相談' }, KINDS);
+const isConsult = s => s.kind === 'consult';
+function consultState(s){
+  if(!isConsult(s)) return '';
+  if(s.is_resolved) return '<span class="cs-state done">解決済み</span>';
+  const n = cmtCount[s.id] || 0;
+  return n ? `<span class="cs-state got">回答 ${n}件</span>` : '<span class="cs-state wait">回答募集中</span>';
+}
 let STORIES = [], cat = null, kind = 'all', likeMap = {}, cmtCount = {};
 
 function drawFilters(){
@@ -145,7 +178,9 @@ function drawFilters(){
     const n = STORIES.filter(s => s.category === c.k).length;
     return `<button type="button" class="catc${cat === c.k ? ' on' : ''}" data-c="${c.k}"><div class="e">${c.e}</div><div class="n">${c.k}</div>${c.x ? `<div class="x">${c.x}</div>` : ''}<div class="c">${n}件</div></button>`;
   }).join('');
-  SS.$('#kinds').innerHTML = [['all','すべて'], ...Object.entries(KINDS)].map(([k, l]) => `<button type="button" class="chip${kind === k ? ' on' : ''}" data-k="${k}">${l}</button>`).join('');
+  const waiting = STORIES.filter(s => isConsult(s) && !s.is_resolved && !(cmtCount[s.id] || 0)).length;
+  SS.$('#consult-n').innerHTML = waiting ? `回答を待っている相談 <b>${waiting}</b> 件` : '';
+  SS.$('#kinds').innerHTML = [['all','すべて'], ...Object.entries(KIND_LABEL)].map(([k, l]) => `<button type="button" class="chip${kind === k ? ' on' : ''}" data-k="${k}">${l}</button>`).join('');
   SS.$$('#cats .catc').forEach(b => b.onclick = () => { cat = cat === b.dataset.c ? null : b.dataset.c; drawFilters(); render(); });
   SS.$$('#kinds .chip').forEach(b => b.onclick = () => { kind = b.dataset.k; drawFilters(); render(); });
 }
@@ -164,7 +199,7 @@ function render(){
   const list = STORIES.filter(s => (!cat || s.category === cat) && (kind === 'all' || s.kind === kind));
   SS.$('#list').innerHTML = list.length ? list.map(s => `
     <div class="story ${s.kind}" data-id="${s.id}">
-      <div class="st-top"><span class="kind ${s.kind}">${KINDS[s.kind]}</span><span class="cat-tag">${SS.esc(s.category)}</span></div>
+      <div class="st-top"><span class="kind ${s.kind}">${KIND_LABEL[s.kind] || ''}</span>${isConsult(s) ? consultState(s) : `<span class="cat-tag">${SS.esc(s.category)}</span>`}</div>
       <div class="st-title">${SS.esc(s.title)}</div>
       <div class="st-ex">${SS.esc(s.body)}</div>
       <div class="st-foot"><div class="au" style="flex:1;">${SS.authorHtml(s)}</div>
@@ -176,7 +211,8 @@ function render(){
 
 async function openStory(id){
   const s = STORIES.find(x => x.id === id); if(!s) return;
-  SS.$('#s-top').innerHTML = `<span class="kind ${s.kind}">${KINDS[s.kind]}</span><span class="cat-tag">${SS.esc(s.category)}</span>`;
+  SS.$('#s-top').innerHTML = `<span class="kind ${s.kind}">${KIND_LABEL[s.kind] || ''}</span>${isConsult(s) ? consultState(s) : `<span class="cat-tag">${SS.esc(s.category)}</span>`}`;
+  markRead(id);
   SS.$('#s-body').innerHTML = '<div class="loading"></div>';
   SS.openSheet('sheet-story');
   const urls = await SS.signedUrls(s.image_paths);
@@ -188,12 +224,14 @@ async function openStory(id){
     ${SS.thumbsHtml(s.image_paths, urls)}
     <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">${SS.likes.html(s.id, likeMap[s.id])}
       ${SS.owns(s.id) ? '<button class="btn ghost sm" id="s-edit">編集</button>' : ''}
-      ${(SS.owns(s.id) || SS.isAdmin()) ? '<button class="btn danger sm" id="s-del">削除</button>' : ''}</div>
-    <div style="margin-top:18px;font-size:13px;font-weight:800;">コメント ${(cs || []).length}件</div>
+      ${isConsult(s) && SS.owns(s.id) ? `<button class="btn ${s.is_resolved ? 'ghost' : 'navy'} sm" id="s-solve">${s.is_resolved ? '解決済みを取り消す' : '✓ 解決した'}</button>` : ''}
+      ${(SS.owns(s.id) || SS.isAdmin()) ? '<button class="btn danger sm" id="s-del">削除</button>' : ''}
+      ${!SS.owns(s.id) ? SS.reportBtn('stories', s.id) : ''}</div>
+    <div style="margin-top:18px;font-size:13px;font-weight:800;">${isConsult(s) ? '回答' : 'コメント'} ${(cs || []).length}件</div>
     ${(cs || []).map(c => `<div class="cmt"><div class="au">${SS.authorHtml(c)}<span class="au-time">${SS.ago(c.created_at)}</span></div><div class="text-body">${SS.linkify(c.body)}</div>
-      ${(SS.owns(c.id) || SS.isAdmin()) ? `<button class="btn ghost sm" style="margin-top:6px;" data-delc="${c.id}">削除</button>` : ''}</div>`).join('')}
-    <textarea class="field" id="c-text" maxlength="1000" placeholder="質問・感想・「うちではこうした」など" style="min-height:64px;margin-top:10px;"></textarea>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;"><button class="btn sm" style="margin-left:auto;" id="c-send">コメントする</button></div>`;
+      <div style="display:flex;gap:6px;margin-top:6px;">${(SS.owns(c.id) || SS.isAdmin()) ? `<button class="btn ghost sm" data-delc="${c.id}">削除</button>` : ''}${!SS.owns(c.id) ? SS.reportBtn('story_comments', c.id) : ''}</div></div>`).join('')}
+    <textarea class="field" id="c-text" maxlength="1000" placeholder="${isConsult(s) ? 'あなたの大学ではどうしたか、教えてあげてください' : '質問・感想・「うちではこうした」など'}" style="min-height:64px;margin-top:10px;"></textarea>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;"><button class="btn sm" style="margin-left:auto;" id="c-send">${isConsult(s) ? '回答する' : 'コメントする'}</button></div>`;
   SS.$('#c-send').onclick = async () => {
     const t = SS.$('#c-text').value.trim(); if(!t) return;
     const { error } = await sb.from('story_comments').insert({ story_id: id, body: t, is_anonymous: false });
@@ -202,6 +240,11 @@ async function openStory(id){
   };
   SS.$$('#s-body [data-delc]').forEach(b => b.onclick = async () => { if(!confirm('コメントを削除しますか？')) return; await sb.from('story_comments').delete().eq('id', b.dataset.delc); cmtCount[id]--; openStory(id); render(); });
   const ed = SS.$('#s-edit'); if(ed) ed.onclick = () => { SS.closeSheet('sheet-story'); openWrite(s); };
+  const sv = SS.$('#s-solve'); if(sv) sv.onclick = async () => {
+    const { error } = await sb.from('stories').update({ is_resolved: !s.is_resolved }).eq('id', id);
+    if(error) return SS.toast(SS.friendly(error));
+    s.is_resolved = !s.is_resolved; SS.toast(s.is_resolved ? '解決済みにしました。回答してくれた人に、お礼のコメントもどうぞ！' : '解決済みを取り消しました'); openStory(id); render(); drawFilters();
+  };
   const dl = SS.$('#s-del'); if(dl) dl.onclick = async () => {
     if(!confirm('このエピソードを削除しますか？')) return;
     const { error } = await sb.from('stories').delete().eq('id', id);
@@ -221,6 +264,14 @@ document.addEventListener('click', async ev => {
 // ---------- 書く・編集 ----------
 let wKind = 'success', wCat = '学習環境の整備', wPicker = null, wEditing = null;
 function drawWrite(){
+  const consult = wCat === '相談';
+  SS.$('#w-kind-wrap').classList.toggle('hidden', consult);
+  SS.$('#w-cat-label').style.marginTop = consult ? '0' : '';
+  SS.$('#w-head').textContent = wEditing ? (consult ? '相談を編集' : 'エピソードを編集') : (consult ? '相談する' : 'エピソードを書く');
+  SS.$('#w-sub').textContent = consult ? '全国の先輩エコー部が答えてくれます。回答がつくと通知が届きます' : 'あなたの経験が、どこかの大学の一歩になります';
+  SS.$('#w-title').placeholder = consult ? '例：部員が集まりません。新歓で何をすればいいですか？' : '例：卒業生の先生に相談して、中古のエコーを譲ってもらえた／空き教室を練習場所として借りられた';
+  SS.$('#w-tmpl-text').innerHTML = consult ? '書き方に迷ったら：<br>①いまの状況　②困っていること　③試したこと　④聞きたいこと' : '書き方に迷ったら：<br>①どんな状況だったか　②やったこと　③結果どうなったか　④次の人へのアドバイス';
+  SS.$('#w-send').textContent = consult ? '相談する' : '投稿する';
   SS.$('#w-kind').innerHTML = Object.entries(KINDS).map(([k, l]) => `<button type="button" class="${k}${wKind === k ? ' on' : ''}" data-k="${k}">${l}</button>`).join('');
   SS.$('#w-cat').innerHTML = CATS.map(c => `<button type="button" class="${wCat === c.k ? 'on' : ''}" data-c="${c.k}">${c.e} ${c.k}</button>`).join('')
     + (() => { const c = CATS.find(x => x.k === wCat); return c && c.x ? `<div class="hint" style="width:100%;margin-top:2px;">例：${c.x}</div>` : ''; })();
@@ -229,9 +280,9 @@ function drawWrite(){
 }
 function openWrite(s){
   wEditing = s || null;
-  if(!wPicker) wPicker = SS.imagePicker(SS.$('#w-imgs'), 4);
-  SS.$('#w-head').textContent = s ? 'エピソードを編集' : 'エピソードを書く';
-  wKind = s ? s.kind : 'success'; wCat = s ? s.category : (cat || '学習環境の整備');
+  if(!wPicker){ wPicker = SS.imagePicker(SS.$('#w-imgs'), 4); SS.$('#w-imgs').addEventListener('change', () => SS.$('#w-privacy').classList.toggle('hidden', !wPicker.count())); }
+  SS.$('#w-priv-ok').checked = false;
+  wKind = s ? (s.kind === 'consult' ? 'success' : s.kind) : 'success'; wCat = s ? s.category : (cat || '学習環境の整備');
   SS.$('#w-title').value = s ? s.title : ''; SS.$('#w-body').value = s ? s.body : '';
   SS.$('#w-imgs').style.display = s ? 'none' : '';
   SS.msg('w-msg'); drawWrite(); SS.openSheet('sheet-write');
@@ -239,10 +290,12 @@ function openWrite(s){
 SS.$('#w-tmpl').onclick = () => {
   const el = SS.$('#w-body');
   if(el.value.trim() && !confirm('いまの本文の下に、書き方の見出しを足しますか？')) return;
-  el.value = (el.value.trim() ? el.value.trim() + '\n\n' : '') + '【どんな状況だったか】\n\n【やったこと】\n\n【結果どうなったか】\n\n【次の人へのアドバイス】\n';
+  const t = wCat === '相談' ? '【いまの状況】\n\n【困っていること】\n\n【試したこと】\n\n【聞きたいこと】\n' : '【どんな状況だったか】\n\n【やったこと】\n\n【結果どうなったか】\n\n【次の人へのアドバイス】\n';
+  el.value = (el.value.trim() ? el.value.trim() + '\n\n' : '') + t;
   el.focus();
 };
 SS.$('#fab').onclick = () => openWrite(null);
+SS.$('#ask').onclick = () => { openWrite(null); wCat = '相談'; drawWrite(); };
 SS.$('#w-send').onclick = async () => {
   const btn = SS.$('#w-send'), title = SS.$('#w-title').value.trim(), body = SS.$('#w-body').value.trim();
   SS.msg('w-msg');
@@ -250,15 +303,17 @@ SS.$('#w-send').onclick = async () => {
   btn.disabled = true;
   try{
     if(wEditing){
-      const { error } = await sb.from('stories').update({ title, body, kind: wKind, category: wCat }).eq('id', wEditing.id);
+      const { error } = await sb.from('stories').update({ title, body, kind: wCat === '相談' ? 'consult' : wKind, category: wCat }).eq('id', wEditing.id);
       if(error) throw error;
     } else {
-      const blobs = wPicker.get(), paths = blobs.length ? await SS.uploadImages(blobs) : [];
-      const { error } = await sb.from('stories').insert({ title, body, kind: wKind, category: wCat, image_paths: paths, is_anonymous: false });
+      const blobs = wPicker.get();
+      if(blobs.length && !SS.$('#w-priv-ok').checked) throw new Error('画像の確認にチェックを入れてください。');
+      const paths = blobs.length ? await SS.uploadImages(blobs) : [];
+      const { error } = await sb.from('stories').insert({ title, body, kind: wCat === '相談' ? 'consult' : wKind, category: wCat, image_paths: paths, is_anonymous: false });
       if(error){ if(paths.length) await sb.storage.from('posts').remove(paths); throw error; }
       wPicker.clear();
     }
-    SS.closeSheet('sheet-write'); SS.toast('投稿しました。ありがとう！'); load();
+    SS.closeSheet('sheet-write'); SS.toast(wCat === '相談' ? '相談しました。回答がつくとベルに通知が届きます' : '投稿しました。ありがとう！'); load();
   }catch(e){ SS.msg('w-msg', SS.friendly(e)); }
   finally{ btn.disabled = false; }
 };
@@ -268,10 +323,22 @@ async function loadNetwork(){
   SS.$('#net').innerHTML = (data || []).map(u => `<span class="net">${SS.esc(u.short_name || u.name)}<b>${SS.esc(u.group_name)}</b></span>`).join('') || '<span class="hint">まだありません</span>';
 }
 
+// 通知から来たとき（launch.html#story-ID）は、その投稿を開く。開いた投稿の通知は「読んだ」にする
+async function markRead(id){
+  try{ await sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('ref_id', id).is('read_at', null); }catch(e){}
+}
+function openFromHash(){
+  const m = location.hash.match(/^#story-([0-9a-f-]{36})$/);
+  if(m && STORIES.find(x => x.id === m[1])) openStory(m[1]);
+  else if(location.hash === '#consult'){ cat = '相談'; drawFilters(); render(); }
+}
+window.addEventListener('hashchange', openFromHash);
 SS.boot().then(async () => {
   SS.tabbar('home');
   await load(); loadNetwork();
+  try{ localStorage.setItem('ss_launch_seen', new Date().toISOString()); }catch(e){}
   SS.reveal();
+  openFromHash();
 });
 </script>
 </body>

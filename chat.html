@@ -2,6 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<!-- 安全のための決まり：このアプリが読み込んでよい場所を、自分のサイト・Supabase・Googleフォントだけに限る -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://gurbkfenumknfdnzxiuo.supabase.co; connect-src 'self' https://gurbkfenumknfdnzxiuo.supabase.co wss://gurbkfenumknfdnzxiuo.supabase.co; media-src 'self' blob: https://gurbkfenumknfdnzxiuo.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>チャット | ソノサポ</title>
 <link rel="manifest" href="manifest.json">
@@ -13,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="vendor/supabase-js-2.117.3.js"></script>
 <script src="config.js"></script>
 <script src="common.js"></script>
 <style>
@@ -72,6 +74,7 @@
 </style>
 </head>
 <body>
+<script>SS.earlyCurtain();</script>
 
 <div class="page-head">
   <div><div class="page-title">チャット</div><div class="page-sub">全国のエコー仲間・指導医に質問できる</div></div>
@@ -119,7 +122,7 @@
       <textarea class="field" id="n-body" maxlength="3000" placeholder="どんな状況で、何を試して、どう見えたか。画像があると答えやすくなります。"></textarea>
       <label class="label">画像（4枚まで）</label>
       <div class="img-picks" id="n-imgs"></div>
-      <div class="privacy hidden" id="n-privacy"><label class="check"><input type="checkbox" id="n-priv-ok">画像に、患者さんの名前・ID・顔など、個人が分かる情報が写っていないことを確認しました</label></div>
+      <div class="privacy hidden" id="n-privacy"><label class="check"><input type="checkbox" id="n-priv-ok">画像は練習画像だけで、患者さんの名前・ID・病院名・顔が写っておらず、練習台になった人が誰か分からないことを確認しました</label></div>
       <div class="msg" id="n-msg"></div>
       <button class="btn block" style="margin-top:14px;" id="n-send">質問を投稿する</button>
     </div>
@@ -229,6 +232,7 @@ async function openThread(id){
       <div class="rep-actions">${SS.likes.html(r.id, lk[r.id])}
         ${(isOwner || SS.isAdmin()) && !SS.owns(r.id) ? `<button class="mini-btn green" data-best="${r.id}">${r.is_best ? 'ベストアンサーを外す' : 'ベストアンサーにする'}</button>` : ''}
         ${(SS.owns(r.id) || SS.isAdmin()) ? `<button class="mini-btn red" data-delrep="${r.id}">削除</button>` : ''}
+        ${!SS.owns(r.id) ? SS.reportBtn('thread_replies', r.id) : ''}
       </div></div>`;
   SS.$('#t-body').innerHTML = `
     <div class="q-box">
@@ -241,6 +245,7 @@ async function openThread(id){
       <div class="q-actions">${SS.likes.html(t.id, lk[t.id])}
         ${(isOwner || SS.isStaff()) ? `<button class="mini-btn green" id="t-resolve">${t.is_resolved ? '未解決に戻す' : '解決済みにする'}</button>` : ''}
         ${(isOwner || SS.isAdmin()) ? `<button class="mini-btn red" id="t-del">質問を削除</button>` : ''}
+        ${!isOwner ? SS.reportBtn('threads', t.id) : ''}
       </div>
     </div>
     <div style="font-size:12px;font-weight:800;color:var(--muted);margin-top:10px;">返信 ${replies.length}件</div>
@@ -248,7 +253,7 @@ async function openThread(id){
     <div class="composer">
       <textarea class="field" id="r-text" maxlength="3000" placeholder="返信を書く"></textarea>
       <div class="comp-row"><div class="img-picks" id="r-imgs" style="margin:0;"></div><button class="btn sm" style="margin-left:auto;" id="r-send">返信する</button></div>
-      <div class="privacy hidden" id="r-privacy"><label class="check"><input type="checkbox" id="r-priv-ok">画像に個人が分かる情報が写っていないことを確認しました</label></div>
+      <div class="privacy hidden" id="r-privacy"><label class="check"><input type="checkbox" id="r-priv-ok">画像は練習画像だけで、患者さんの名前・ID・病院名・顔が写っておらず、練習台になった人が誰か分からないことを確認しました</label></div>
       <div class="msg" id="r-msg"></div>
     </div>`;
   replyPicker = SS.imagePicker(SS.$('#r-imgs'), 4);
@@ -357,6 +362,7 @@ SS.boot().then(async () => {
   SS.reveal();
   if(p.get('new')) openNew(p.get('section'));
   else if(p.get('t')) openThread(p.get('t'));
+  else if(/^#thread-[0-9a-f-]{36}$/.test(location.hash)) openThread(location.hash.slice(8));
 });
 // シートを閉じたら URL を元に戻す
 document.addEventListener('click', ev => { if(ev.target.closest('[data-close="sheet-thread"]') || ev.target.id === 'sheet-thread'){ try{ history.replaceState(null, '', 'chat.html'); }catch(e){} SS.refreshChatBadge(); } });

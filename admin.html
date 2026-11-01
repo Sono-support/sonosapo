@@ -2,6 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<!-- 安全のための決まり：このアプリが読み込んでよい場所を、自分のサイト・Supabase・Googleフォントだけに限る -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://gurbkfenumknfdnzxiuo.supabase.co; connect-src 'self' https://gurbkfenumknfdnzxiuo.supabase.co wss://gurbkfenumknfdnzxiuo.supabase.co; media-src 'self' blob: https://gurbkfenumknfdnzxiuo.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>管理画面 | ソノサポ</title>
 <meta name="robots" content="noindex">
@@ -11,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="vendor/supabase-js-2.117.3.js"></script>
 <script src="config.js"></script>
 <script src="common.js"></script>
 <style>
@@ -38,17 +40,74 @@
 .lab .field{flex:1;padding:8px 10px;font-size:14px;}
 .lab button{width:32px;height:32px;border-radius:8px;border:1px solid var(--border-light);background:var(--black);color:var(--muted);}
 .howto{font-size:13px;line-height:1.9;color:var(--muted);}
+#tabs{overflow-x:auto;scrollbar-width:none;}
+#tabs button{flex:0 0 auto;padding:8px 12px;position:relative;}
+#tabs .n{display:inline-block;min-width:16px;height:16px;line-height:16px;border-radius:999px;background:#F06060;color:#fff;font-size:10px;padding:0 4px;margin-left:4px;font-family:"JetBrains Mono",monospace;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 13px;margin-bottom:8px;}
+.card.open{border-color:rgba(255,147,5,.45);}
+.card .m{font-size:10.5px;color:var(--dim);font-family:"JetBrains Mono",monospace;display:flex;gap:8px;flex-wrap:wrap;}
+.card .t{font-size:13px;font-weight:800;margin-top:4px;}
+.card .b{font-size:12.5px;color:var(--muted);white-space:pre-wrap;word-break:break-word;margin-top:4px;line-height:1.7;}
+.card .ex{font-size:12.5px;white-space:pre-wrap;word-break:break-word;margin-top:6px;padding:8px 10px;border-left:3px solid var(--border-light);background:var(--black);border-radius:6px;}
+.card .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.pill{font-size:10px;font-weight:800;border-radius:999px;padding:1px 8px;border:1px solid var(--border-light);color:var(--muted);}
+.pill.open{background:var(--orange);border-color:var(--orange);color:var(--black);}
+.pill.sec{background:#F06060;border-color:#F06060;color:#fff;}
+.keybox{font:12px "JetBrains Mono",monospace;word-break:break-all;background:var(--black);border:1px solid var(--border-light);border-radius:8px;padding:8px 10px;margin-top:4px;}
+.ur{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);}
+.ur:first-child{border-top:none;}
+.ur .nm{flex:1;min-width:0;font-size:13px;font-weight:700;}
+.ur .nm small{display:block;font-size:10.5px;color:var(--dim);font-weight:400;font-family:"JetBrains Mono",monospace;}
 .howto b{color:var(--text);}
 </style>
 </head>
 <body>
+<script>SS.earlyCurtain();</script>
 <div class="page-head">
   <div><a class="back" href="index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>ホーム</a>
   <div class="page-title" style="margin-top:10px;">管理画面</div><div class="page-sub">ADMIN ー 管理者だけが見られます</div></div>
 </div>
 
 <div class="wrap">
-  <div class="seg" id="tabs"><button data-t="univ" class="on">大学・コード</button><button data-t="labels">ラベル</button><button data-t="help">使い方</button></div>
+  <div class="seg" id="tabs"><button data-t="univ" class="on">大学・コード</button><button data-t="rev">確認者</button><button data-t="rep">通報<span class="n hidden" id="n-rep"></span></button><button data-t="ct">連絡<span class="n hidden" id="n-ct"></span></button><button data-t="labels">ラベル</button><button data-t="set">プッシュ通知</button><button data-t="help">使い方</button></div>
+
+  <!-- 確認者（指導医）の一覧 -->
+  <section id="t-rev" class="hidden">
+    <div class="hint" style="margin:12px 0 10px;">確認者は、自分の大学の部員の名前・学年・認定アプリの画像を見られ、判定もできます。<b style="color:var(--text);">知らない人がいたら「部員に戻す」</b>を押し、その大学の確認者用コードを「作り直す」してください。</div>
+    <input class="field" id="rv-q" placeholder="大学名・名前で絞り込み">
+    <div id="rv-list" style="margin-top:10px;"><div class="loading"></div></div>
+  </section>
+
+  <!-- 通報 -->
+  <section id="t-rep" class="hidden">
+    <div class="seg" id="rp-f" style="margin:12px 0 10px;"><button data-f="open" class="on">未対応</button><button data-f="done">対応済み</button></div>
+    <div id="rp-list"><div class="loading"></div></div>
+  </section>
+
+  <!-- 運営への連絡 -->
+  <section id="t-ct" class="hidden">
+    <div class="seg" id="ct-f" style="margin:12px 0 10px;"><button data-f="open" class="on">未対応</button><button data-f="done">対応済み</button></div>
+    <div id="ct-list"><div class="loading"></div></div>
+  </section>
+
+  <!-- プッシュ通知の設定 -->
+  <section id="t-set" class="hidden">
+    <div class="card" style="margin-top:12px;">
+      <div class="t">プッシュ通知の鍵</div>
+      <div class="b" id="vp-state">確認しています…</div>
+      <div class="b" style="margin-top:8px;">最初の1回だけ、ここで鍵を作り、<b style="color:var(--text);">PUSH-SETUP.md</b> の手順で Supabase に登録します。鍵を作り直すと、全員がもう一度「通知を受け取る」を押す必要があります。</div>
+      <div class="acts"><button class="btn sm" id="vp-gen">鍵を作る</button></div>
+      <div id="vp-out" class="hidden">
+        <div class="msg show ng" style="margin-top:12px;">下の3つを、いま Supabase の Edge Functions → Secrets に登録してください。<b>秘密鍵と合言葉は、ここで閉じると二度と表示されません</b>（GitHub やチャットには絶対に貼らないでください）。</div>
+        <label class="label">VAPID_PUBLIC_KEY（公開鍵）</label><div class="keybox" id="vp-pub"></div><button class="btn ghost sm" style="margin-top:6px;" data-copy="vp-pub">コピー</button>
+        <label class="label">VAPID_PRIVATE_KEY（秘密鍵）</label><div class="keybox" id="vp-priv"></div><button class="btn ghost sm" style="margin-top:6px;" data-copy="vp-priv">コピー</button>
+        <label class="label">WEBHOOK_SECRET（合言葉）</label><div class="keybox" id="vp-sec"></div><button class="btn ghost sm" style="margin-top:6px;" data-copy="vp-sec">コピー</button>
+        <label class="check"><input type="checkbox" id="vp-done">3つとも Supabase の Secrets に登録しました（合言葉は Database Webhook のヘッダーにも入れます）</label>
+        <button class="btn block" style="margin-top:10px;" id="vp-save">公開鍵をアプリに保存して、通知を使えるようにする</button>
+        <div class="msg" id="vp-msg"></div>
+      </div>
+    </div>
+  </section>
 
   <!-- 大学・招待コード -->
   <section id="t-univ">
@@ -86,8 +145,10 @@ let UNIS = [], CODES = [], COUNTS = {}, onlyActive = false;
 const openU = new Set();
 SS.$$('#tabs button').forEach(b => b.onclick = () => {
   SS.$$('#tabs button').forEach(x => x.classList.toggle('on', x === b));
-  ['univ','labels','help'].forEach(t => SS.$('#t-' + t).classList.toggle('hidden', t !== b.dataset.t));
+  ['univ','rev','rep','ct','labels','set','help'].forEach(t => SS.$('#t-' + t).classList.toggle('hidden', t !== b.dataset.t));
+  ({ rev: loadRev, rep: loadRep, ct: loadCt, set: loadSet })[b.dataset.t]?.();
 });
+const openTab = t => { const b = SS.$(`#tabs button[data-t="${t}"]`); if(b){ b.click(); b.scrollIntoView({ inline: 'center', block: 'nearest' }); } };
 
 async function loadUnis(){
   const [u, c, n] = await Promise.all([
@@ -208,9 +269,141 @@ SS.$('#nl-add').onclick = async () => {
   SS.$('#nl-name').value = ''; loadLabels();
 };
 
+// ---------- 確認者の一覧 ----------
+let REVS = [];
+async function loadRev(){
+  const { data, error } = await sb.from('profiles').select('id,name,university_id,created_at,last_seen_at').eq('role', 'reviewer').order('created_at');
+  if(error){ SS.$('#rv-list').innerHTML = '<div class="empty">読み込めませんでした</div>'; return; }
+  REVS = data || []; drawRev();
+}
+function drawRev(){
+  const q = SS.$('#rv-q').value.trim();
+  const uname = id => { const u = UNIS.find(x => x.id === id); return u ? u.name : '（大学なし）'; };
+  const groups = {};
+  REVS.filter(r => !q || ((r.name || '') + uname(r.university_id)).includes(q)).forEach(r => (groups[r.university_id] = groups[r.university_id] || []).push(r));
+  const ids = Object.keys(groups).sort((a, b) => ((UNIS.find(u => u.id === +a) || {}).sort_order || 0) - ((UNIS.find(u => u.id === +b) || {}).sort_order || 0));
+  SS.$('#rv-list').innerHTML = ids.map(id => `<div class="card"><div class="t">${SS.esc(uname(+id))}<span class="pill" style="margin-left:6px;">${groups[id].length}人</span></div>
+      ${groups[id].map(r => `<div class="ur"><div class="nm">${SS.esc(r.name || '（名前なし）')}<small>参加 ${SS.fmtDate(r.created_at)}${r.last_seen_at ? ' ・ 最後に使った日 ' + SS.fmtDate(r.last_seen_at) : ''}</small></div>
+        <button class="btn danger sm" data-demote="${r.id}">部員に戻す</button></div>`).join('')}</div>`).join('')
+    || '<div class="empty">確認者はまだいません</div>';
+  SS.$$('#rv-list [data-demote]').forEach(b => b.onclick = async () => {
+    const r = REVS.find(x => x.id === b.dataset.demote);
+    if(!confirm(`「${r.name}」さん（${uname(r.university_id)}）を、確認者から部員に戻しますか？\n戻すと、部員の画像を見たり判定したりできなくなります。`)) return;
+    const { data, error } = await sb.from('profiles').update({ role: 'member' }).eq('id', r.id).select();
+    if(error || !data || !data.length) return SS.toast(error ? SS.friendly(error) : '変更できませんでした');
+    SS.toast('部員に戻しました。必要なら、その大学の確認者用コードを「作り直す」してください'); loadRev(); loadUnis();
+  });
+}
+SS.$('#rv-q').addEventListener('input', drawRev);
+
+// ---------- 通報 ----------
+const TBL = { threads: 'チャットの質問', thread_replies: 'チャットの返信', stories: '立ち上げのエピソード・相談', story_comments: '立ち上げのコメント',
+  section_comments: '単元コメント', announcements: 'お知らせ', events: 'カレンダーの予定', event_impressions: '予定の感想', materials: 'まなぶの資料' };
+const VIEW = (t, id) => t === 'threads' ? `chat.html?t=${id}` : t === 'stories' ? `launch.html#story-${id}` : '';
+let rpF = 'open';
+SS.$$('#rp-f button').forEach(b => b.onclick = () => { rpF = b.dataset.f; SS.$$('#rp-f button').forEach(x => x.classList.toggle('on', x === b)); loadRep(); });
+async function loadRep(){
+  const { data, error } = await sb.from('reports').select('*').eq('status', rpF).order('created_at', { ascending: false }).limit(100);
+  if(error){ SS.$('#rp-list').innerHTML = '<div class="empty">読み込めませんでした（05_update.sql を実行しましたか？）</div>'; return; }
+  SS.$('#rp-list').innerHTML = (data || []).map(r => `<div class="card${r.status === 'open' ? ' open' : ''}">
+      <div class="m"><span class="pill${r.status === 'open' ? ' open' : ''}">${r.status === 'open' ? '未対応' : '対応済み'}</span><span>${SS.esc(TBL[r.target_table] || r.target_table)}</span><span>${SS.fmtDate(r.created_at)}</span></div>
+      <div class="t">理由：${SS.esc(r.reason)}</div>
+      <div class="ex">${SS.esc(r.excerpt || '')}</div>
+      <div class="b">投稿した人：${SS.esc(r.target_author || '不明')}</div>
+      <div class="acts">${VIEW(r.target_table, r.target_id) ? `<a class="btn ghost sm" href="${VIEW(r.target_table, r.target_id)}">画面で見る</a>` : ''}
+        <button class="btn danger sm" data-rpdel="${r.id}">投稿を削除</button>
+        ${r.status === 'open' ? `<button class="btn sm" data-rpdone="${r.id}">対応済みにする</button>` : `<button class="btn ghost sm" data-rpopen="${r.id}">未対応に戻す</button>`}</div></div>`).join('')
+    || `<div class="empty">${rpF === 'open' ? '未対応の通報はありません' : 'まだありません'}</div>`;
+  const find = id => (data || []).find(x => x.id === id);
+  SS.$$('#rp-list [data-rpdel]').forEach(b => b.onclick = async () => {
+    const r = find(b.dataset.rpdel);
+    if(!confirm('通報された投稿を削除しますか？（元に戻せません）')) return;
+    const { data: row } = await sb.from(r.target_table).select('*').eq('id', r.target_id).maybeSingle();
+    if(row){
+      const { error } = await sb.from(r.target_table).delete().eq('id', r.target_id);
+      if(error) return SS.toast(SS.friendly(error));
+      if(row.image_paths && row.image_paths.length) await sb.storage.from('posts').remove(row.image_paths);
+      if(r.target_table === 'materials' && row.storage_path) await sb.storage.from('materials').remove([row.storage_path]);
+    }
+    await sb.from('reports').update({ status: 'done', handled_at: new Date().toISOString() }).eq('id', r.id);
+    SS.toast(row ? '削除して、対応済みにしました' : 'すでに削除されていました。対応済みにしました'); loadRep(); counts();
+  });
+  SS.$$('#rp-list [data-rpdone]').forEach(b => b.onclick = async () => { await sb.from('reports').update({ status: 'done', handled_at: new Date().toISOString() }).eq('id', b.dataset.rpdone); loadRep(); counts(); });
+  SS.$$('#rp-list [data-rpopen]').forEach(b => b.onclick = async () => { await sb.from('reports').update({ status: 'open', handled_at: null }).eq('id', b.dataset.rpopen); loadRep(); counts(); });
+}
+
+// ---------- 運営への連絡 ----------
+const CT_LABEL = { security: '安全上の問題', bug: '不具合', question: '質問・相談', delete: '削除の依頼', other: 'その他' };
+let ctF = 'open';
+SS.$$('#ct-f button').forEach(b => b.onclick = () => { ctF = b.dataset.f; SS.$$('#ct-f button').forEach(x => x.classList.toggle('on', x === b)); loadCt(); });
+async function loadCt(){
+  const { data, error } = await sb.from('contacts').select('*').eq('status', ctF).order('created_at', { ascending: false }).limit(100);
+  if(error){ SS.$('#ct-list').innerHTML = '<div class="empty">読み込めませんでした（05_update.sql を実行しましたか？）</div>'; return; }
+  SS.$('#ct-list').innerHTML = (data || []).map(c => `<div class="card${c.status === 'open' ? ' open' : ''}">
+      <div class="m"><span class="pill${c.category === 'security' ? ' sec' : c.status === 'open' ? ' open' : ''}">${SS.esc(CT_LABEL[c.category] || '')}</span><span>${SS.esc(c.user_name || '（退会した人）')}${c.user_univ ? '（' + SS.esc(c.user_univ) + '）' : ''}</span><span>${SS.fmtDate(c.created_at)}</span></div>
+      <div class="ex">${SS.esc(c.body)}</div>
+      <label class="label">返信（送った人に通知が届きます）</label>
+      <textarea class="field" data-ctr="${c.id}" maxlength="3000" style="min-height:70px;">${SS.esc(c.reply || '')}</textarea>
+      <div class="acts"><button class="btn sm" data-ctsend="${c.id}">返信して対応済みにする</button>
+        ${c.status === 'open' ? `<button class="btn ghost sm" data-ctdone="${c.id}">返信せずに対応済み</button>` : `<button class="btn ghost sm" data-ctopen="${c.id}">未対応に戻す</button>`}</div></div>`).join('')
+    || `<div class="empty">${ctF === 'open' ? '未対応の連絡はありません' : 'まだありません'}</div>`;
+  SS.$$('#ct-list [data-ctsend]').forEach(b => b.onclick = async () => {
+    const reply = SS.$(`#ct-list [data-ctr="${b.dataset.ctsend}"]`).value.trim();
+    if(!reply) return SS.toast('返信を入力してください');
+    const { error } = await sb.from('contacts').update({ reply, status: 'done' }).eq('id', b.dataset.ctsend);
+    if(error) return SS.toast(SS.friendly(error));
+    SS.toast('返信しました'); loadCt(); counts();
+  });
+  SS.$$('#ct-list [data-ctdone]').forEach(b => b.onclick = async () => { await sb.from('contacts').update({ status: 'done' }).eq('id', b.dataset.ctdone); loadCt(); counts(); });
+  SS.$$('#ct-list [data-ctopen]').forEach(b => b.onclick = async () => { await sb.from('contacts').update({ status: 'open' }).eq('id', b.dataset.ctopen); loadCt(); counts(); });
+}
+
+// ---------- プッシュ通知の鍵 ----------
+const b64u = u8 => btoa(String.fromCharCode(...u8)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+let VP = null;
+async function loadSet(){
+  const { data, error } = await sb.from('app_settings').select('value,updated_at').eq('key', 'vapid_public_key').maybeSingle();
+  SS.$('#vp-state').textContent = error ? '読み込めませんでした（05_update.sql を実行しましたか？）'
+    : data && data.value ? '✓ 鍵は登録済みです（' + SS.fmtDate(data.updated_at) + '）。作り直す必要はありません。' : 'まだ鍵がありません。';
+  SS.$('#vp-gen').textContent = data && data.value ? '鍵を作り直す' : '鍵を作る';
+}
+SS.$('#vp-gen').onclick = async () => {
+  if(SS.$('#vp-gen').textContent === '鍵を作り直す' && !confirm('鍵を作り直すと、全員がもう一度「通知を受け取る」を押す必要があります。作り直しますか？')) return;
+  const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+  const pub = b64u(new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey)));
+  const priv = (await crypto.subtle.exportKey('jwk', kp.privateKey)).d;
+  const sec = b64u(crypto.getRandomValues(new Uint8Array(24)));
+  VP = { pub, priv, sec };
+  SS.$('#vp-pub').textContent = pub; SS.$('#vp-priv').textContent = priv; SS.$('#vp-sec').textContent = sec;
+  SS.$('#vp-out').classList.remove('hidden'); SS.$('#vp-done').checked = false; SS.msg('vp-msg');
+};
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-copy]'); if(!b) return;
+  try{ await navigator.clipboard.writeText(SS.$('#' + b.dataset.copy).textContent); SS.toast('コピーしました'); }catch(e){ SS.toast('コピーできませんでした。長押しで選んでコピーしてください'); }
+});
+SS.$('#vp-save').onclick = async () => {
+  if(!VP) return;
+  if(!SS.$('#vp-done').checked){ SS.msg('vp-msg', '先に3つを Supabase に登録して、チェックを入れてください。'); return; }
+  const { error } = await sb.from('app_settings').upsert({ key: 'vapid_public_key', value: VP.pub, updated_at: new Date().toISOString() });
+  if(error){ SS.msg('vp-msg', SS.friendly(error)); return; }
+  VP = null; SS.$('#vp-out').classList.add('hidden'); SS.toast('保存しました。各自「アカウント」→「通知を受け取る」で使えます'); loadSet();
+};
+
+// ---------- 未対応の数 ----------
+async function counts(){
+  const [{ count: r }, { count: c }] = await Promise.all([
+    sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+    sb.from('contacts').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+  ]);
+  [['n-rep', r], ['n-ct', c]].forEach(([id, n]) => { const el = SS.$('#' + id); el.textContent = n || ''; el.classList.toggle('hidden', !n); });
+}
+
 SS.boot({ adminOnly: true }).then(async () => {
   await Promise.all([loadUnis(), loadLabels()]);
+  counts();
   SS.reveal();
+  if(location.hash === '#reports') openTab('rep');
+  else if(location.hash === '#contacts') openTab('ct');
 });
 </script>
 </body>
