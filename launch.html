@@ -18,7 +18,7 @@
 <script src="common.js"></script>
 <style>
 .hero{position:relative;overflow:hidden;background:radial-gradient(90% 90% at 100% 100%, #2A4AA8 0%, transparent 62%), radial-gradient(80% 60% at 0% 0%, rgba(255,147,5,.14), transparent 60%), var(--navy);
-  padding:calc(18px + env(safe-area-inset-top)) 18px 22px;border-bottom:1px solid rgba(143,166,232,.25);}
+  padding:calc(18px + var(--ss-top)) 18px 22px;border-bottom:1px solid rgba(143,166,232,.25);}
 .hero-in{max-width:680px;margin:0 auto;position:relative;min-height:190px;}
 .back{display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:700;color:#C9D3F2;text-decoration:none;border:1px solid rgba(143,166,232,.35);border-radius:999px;padding:5px 11px 5px 7px;background:rgba(10,18,48,.4);}
 .hero-k{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.22em;color:var(--navy-light);margin-top:16px;}
@@ -32,6 +32,7 @@
 .catc .e{font-size:20px;line-height:1;}
 .catc .n{font-size:11.5px;font-weight:800;margin-top:6px;line-height:1.35;}
 .catc .c{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--dim);margin-top:2px;}
+.catc .x{font-size:9px;color:var(--muted);line-height:1.35;margin-top:2px;}
 .catc.on{border-color:var(--orange);background:var(--orange-bg);}
 
 .kinds{margin:12px 0;}
@@ -76,7 +77,7 @@
     <a class="back" href="index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>ホーム</a>
     <div class="hero-k">02 ー BUILD YOUR CLUB</div>
     <div class="hero-t">エコー部<br>立ち上げ</div>
-    <div class="hero-d">全国の仲間の成功も失敗も、次の誰かの近道に。機器の調達、学び方、部員集め…ぜんぶ残していこう。</div>
+    <div class="hero-d">全国の仲間の成功も失敗も、次の誰かの近道に。学習環境の整備、学び方、部員集め…ぜんぶ残していこう。</div>
     <img class="hero-doc" src="assets/doctor.webp" alt="">
   </div>
 </header>
@@ -115,14 +116,13 @@
       <label class="label">テーマ</label>
       <div class="cat-pick" id="w-cat"></div>
       <label class="label">タイトル <span class="req">*</span></label>
-      <input class="field" id="w-title" maxlength="80" placeholder="例：卒業生の先生に相談して、中古のエコーを譲ってもらえた">
+      <input class="field" id="w-title" maxlength="80" placeholder="例：卒業生の先生に相談して、中古のエコーを譲ってもらえた／空き教室を練習場所として借りられた">
       <label class="label">本文 <span class="req">*</span></label>
       <textarea class="field" id="w-body" maxlength="5000" style="min-height:180px;"></textarea>
       <div class="tmpl">書き方に迷ったら：<br>①どんな状況だったか　②やったこと　③結果どうなったか　④次の人へのアドバイス
         <br><button type="button" class="btn ghost sm" id="w-tmpl">この形で書き始める</button></div>
       <label class="label">画像（4枚まで）</label>
       <div class="img-picks" id="w-imgs"></div>
-      <label class="check"><input type="checkbox" id="w-anon">匿名で投稿する（名前・大学を出さない）</label>
       <div class="msg" id="w-msg"></div>
       <button class="btn block" style="margin-top:14px;" id="w-send">投稿する</button>
     </div>
@@ -134,7 +134,7 @@
 // エコー部立ち上げ：成功・失敗・工夫のエピソード集
 // ================================================================
 const CATS = [
-  { k:'機器の調達', e:'🖥️' }, { k:'学び方', e:'📚' }, { k:'部員集め', e:'🙋' },
+  { k:'学習環境の整備', e:'🖥️', x:'機器の調達・練習場所の確保など' }, { k:'学び方', e:'📚' }, { k:'部員集め', e:'🙋' },
   { k:'指導医・大学', e:'🤝' }, { k:'運営・続け方', e:'🔁' }, { k:'その他', e:'💡' },
 ];
 const KINDS = { success: 'うまくいった', failure: '失敗から学んだ', tip: '工夫・アイデア' };
@@ -143,7 +143,7 @@ let STORIES = [], cat = null, kind = 'all', likeMap = {}, cmtCount = {};
 function drawFilters(){
   SS.$('#cats').innerHTML = CATS.map(c => {
     const n = STORIES.filter(s => s.category === c.k).length;
-    return `<button type="button" class="catc${cat === c.k ? ' on' : ''}" data-c="${c.k}"><div class="e">${c.e}</div><div class="n">${c.k}</div><div class="c">${n}件</div></button>`;
+    return `<button type="button" class="catc${cat === c.k ? ' on' : ''}" data-c="${c.k}"><div class="e">${c.e}</div><div class="n">${c.k}</div>${c.x ? `<div class="x">${c.x}</div>` : ''}<div class="c">${n}件</div></button>`;
   }).join('');
   SS.$('#kinds').innerHTML = [['all','すべて'], ...Object.entries(KINDS)].map(([k, l]) => `<button type="button" class="chip${kind === k ? ' on' : ''}" data-k="${k}">${l}</button>`).join('');
   SS.$$('#cats .catc').forEach(b => b.onclick = () => { cat = cat === b.dataset.c ? null : b.dataset.c; drawFilters(); render(); });
@@ -193,10 +193,10 @@ async function openStory(id){
     ${(cs || []).map(c => `<div class="cmt"><div class="au">${SS.authorHtml(c)}<span class="au-time">${SS.ago(c.created_at)}</span></div><div class="text-body">${SS.linkify(c.body)}</div>
       ${(SS.owns(c.id) || SS.isAdmin()) ? `<button class="btn ghost sm" style="margin-top:6px;" data-delc="${c.id}">削除</button>` : ''}</div>`).join('')}
     <textarea class="field" id="c-text" maxlength="1000" placeholder="質問・感想・「うちではこうした」など" style="min-height:64px;margin-top:10px;"></textarea>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;"><label class="check" style="margin:0;"><input type="checkbox" id="c-anon">匿名</label><button class="btn sm" style="margin-left:auto;" id="c-send">コメントする</button></div>`;
+    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;"><button class="btn sm" style="margin-left:auto;" id="c-send">コメントする</button></div>`;
   SS.$('#c-send').onclick = async () => {
     const t = SS.$('#c-text').value.trim(); if(!t) return;
-    const { error } = await sb.from('story_comments').insert({ story_id: id, body: t, is_anonymous: SS.$('#c-anon').checked });
+    const { error } = await sb.from('story_comments').insert({ story_id: id, body: t, is_anonymous: false });
     if(error) return SS.toast(SS.friendly(error));
     cmtCount[id] = (cmtCount[id] || 0) + 1; openStory(id); render();
   };
@@ -219,10 +219,11 @@ document.addEventListener('click', async ev => {
 });
 
 // ---------- 書く・編集 ----------
-let wKind = 'success', wCat = '機器の調達', wPicker = null, wEditing = null;
+let wKind = 'success', wCat = '学習環境の整備', wPicker = null, wEditing = null;
 function drawWrite(){
   SS.$('#w-kind').innerHTML = Object.entries(KINDS).map(([k, l]) => `<button type="button" class="${k}${wKind === k ? ' on' : ''}" data-k="${k}">${l}</button>`).join('');
-  SS.$('#w-cat').innerHTML = CATS.map(c => `<button type="button" class="${wCat === c.k ? 'on' : ''}" data-c="${c.k}">${c.e} ${c.k}</button>`).join('');
+  SS.$('#w-cat').innerHTML = CATS.map(c => `<button type="button" class="${wCat === c.k ? 'on' : ''}" data-c="${c.k}">${c.e} ${c.k}</button>`).join('')
+    + (() => { const c = CATS.find(x => x.k === wCat); return c && c.x ? `<div class="hint" style="width:100%;margin-top:2px;">例：${c.x}</div>` : ''; })();
   SS.$$('#w-kind button').forEach(b => b.onclick = () => { wKind = b.dataset.k; drawWrite(); });
   SS.$$('#w-cat button').forEach(b => b.onclick = () => { wCat = b.dataset.c; drawWrite(); });
 }
@@ -230,9 +231,8 @@ function openWrite(s){
   wEditing = s || null;
   if(!wPicker) wPicker = SS.imagePicker(SS.$('#w-imgs'), 4);
   SS.$('#w-head').textContent = s ? 'エピソードを編集' : 'エピソードを書く';
-  wKind = s ? s.kind : 'success'; wCat = s ? s.category : (cat || '機器の調達');
+  wKind = s ? s.kind : 'success'; wCat = s ? s.category : (cat || '学習環境の整備');
   SS.$('#w-title').value = s ? s.title : ''; SS.$('#w-body').value = s ? s.body : '';
-  SS.$('#w-anon').checked = s ? s.is_anonymous : false; SS.$('#w-anon').disabled = !!s;
   SS.$('#w-imgs').style.display = s ? 'none' : '';
   SS.msg('w-msg'); drawWrite(); SS.openSheet('sheet-write');
 }
@@ -254,7 +254,7 @@ SS.$('#w-send').onclick = async () => {
       if(error) throw error;
     } else {
       const blobs = wPicker.get(), paths = blobs.length ? await SS.uploadImages(blobs) : [];
-      const { error } = await sb.from('stories').insert({ title, body, kind: wKind, category: wCat, image_paths: paths, is_anonymous: SS.$('#w-anon').checked });
+      const { error } = await sb.from('stories').insert({ title, body, kind: wKind, category: wCat, image_paths: paths, is_anonymous: false });
       if(error){ if(paths.length) await sb.storage.from('posts').remove(paths); throw error; }
       wPicker.clear();
     }

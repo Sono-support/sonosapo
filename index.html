@@ -20,7 +20,7 @@
 <script src="common.js"></script>
 <style>
 /* ===================== 参加画面（招待コード） ===================== */
-#join{display:none;min-height:100vh;min-height:100dvh;padding:calc(28px + env(safe-area-inset-top)) 20px 40px;
+#join{display:none;min-height:100vh;min-height:100dvh;padding:calc(28px + var(--ss-top)) 20px 40px;
   background:radial-gradient(110% 60% at 50% 0%, rgba(31,58,134,.55), transparent 70%), var(--black);}
 #join.on{display:block;}
 .join-wrap{max-width:400px;margin:0 auto;}
@@ -39,29 +39,29 @@
 .ios-note{background:rgba(255,147,5,.08);border:1px solid rgba(255,147,5,.35);border-radius:12px;padding:12px 14px;font-size:12px;line-height:1.75;margin-bottom:14px;}
 .ios-note b{color:var(--orange-light);}
 
-/* ===================== ホーム ===================== */
+/* ===================== ホーム（1画面におさまる） ===================== */
 #home{display:none;}
-#home.on{display:block;}
-.home-top{max-width:680px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px;}
-.avatar{width:42px;height:42px;border-radius:50%;background:var(--orange);color:var(--black);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;text-decoration:none;flex-shrink:0;}
+#home.on{display:flex;flex-direction:column;height:calc(100vh - var(--tabbar-h) - 16px);height:calc(100dvh - var(--tabbar-h) - env(safe-area-inset-bottom) - 16px);min-height:560px;}
+.home-top{width:100%;max-width:680px;margin:0 auto;padding:calc(12px + var(--ss-top)) 16px 8px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--orange);color:var(--black);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;text-decoration:none;flex-shrink:0;}
 .greet{flex:1;min-width:0;}
 .greet-name{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .greet-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.home-body{max-width:680px;margin:0 auto;padding:6px 16px 10px;display:flex;flex-direction:column;gap:12px;}
+.home-body{flex:1;min-height:0;width:100%;max-width:680px;margin:0 auto;padding:4px 16px 0;display:flex;flex-direction:column;gap:10px;}
 
-.install{display:none;align-items:center;gap:10px;background:var(--card);border:1px solid rgba(255,147,5,.3);border-radius:12px;padding:10px 12px;font-size:12px;cursor:pointer;}
+.install{display:none;align-items:center;gap:10px;background:var(--card);border:1px solid rgba(255,147,5,.3);border-radius:12px;padding:8px 12px;font-size:12px;cursor:pointer;flex-shrink:0;}
 .install b{font-weight:800;}
 .install span{color:var(--muted);}
 .install button{margin-left:auto;background:none;border:none;color:var(--dim);font-size:14px;}
 
-/* 2つのメイン */
-.mains{display:grid;gap:12px;}
-.main-card{position:relative;overflow:hidden;isolation:isolate;border-radius:22px;padding:20px 18px 18px;min-height:182px;display:flex;flex-direction:column;text-decoration:none;color:var(--text);transition:transform .16s var(--ease);}
+/* 2つのメイン（画面の高さに合わせて伸び縮み） */
+.mains{flex:1;min-height:0;display:grid;grid-template-rows:1fr 1fr;gap:10px;}
+.main-card{position:relative;overflow:hidden;isolation:isolate;border-radius:22px;padding:18px 18px 16px;min-height:150px;display:flex;flex-direction:column;text-decoration:none;color:var(--text);transition:transform .16s var(--ease);cursor:pointer;}
 .main-card:active{transform:scale(.98);}
 .main-card .mc-pre{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.2em;}
-.main-card .mc-title{font-size:32px;font-weight:900;letter-spacing:.05em;line-height:1.15;margin-top:6px;}
-.main-card .mc-lead{font-size:12px;line-height:1.7;margin-top:8px;max-width:58%;}
-.main-card .mc-foot{margin-top:auto;padding-top:14px;display:flex;gap:6px;flex-wrap:wrap;padding-right:44px;}
+.main-card .mc-title{font-size:30px;font-weight:900;letter-spacing:.05em;line-height:1.15;margin-top:4px;}
+.main-card .mc-lead{font-size:12px;line-height:1.7;margin-top:6px;max-width:58%;}
+.main-card .mc-foot{margin-top:auto;padding-top:10px;display:flex;gap:6px;flex-wrap:wrap;padding-right:44px;}
 .main-card .mc-go{position:absolute;right:14px;bottom:14px;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
 .mc-tag{font-size:10.5px;font-weight:700;border-radius:999px;padding:5px 9px;white-space:nowrap;}
 
@@ -81,25 +81,81 @@
 .mc-launch .mc-lead{color:#C9D3F2;}
 .mc-launch .mc-tag{border:1px solid rgba(143,166,232,.4);color:#DCE4FF;background:rgba(12,20,52,.55);}
 .mc-launch .mc-go{background:#fff;color:var(--navy);top:14px;bottom:auto;}
-.mc-launch .mc-doc{position:absolute;z-index:-1;right:-34px;bottom:-34px;height:184px;width:auto;opacity:.95;filter:drop-shadow(0 8px 18px rgba(0,0,0,.35));}
-@media (max-width:370px){ .main-card .mc-title{font-size:27px;} .mc-launch .mc-doc{height:170px;} }
+.mc-launch .mc-doc{position:absolute;z-index:-1;right:-30px;bottom:-34px;height:min(190px, 92%);width:auto;opacity:.95;filter:drop-shadow(0 8px 18px rgba(0,0,0,.35));}
+@media (max-width:370px){ .main-card .mc-title{font-size:26px;} }
+@media (max-height:700px){ .main-card{padding:14px 16px 12px;} .main-card .mc-title{font-size:25px;} .main-card .mc-lead{font-size:11px;} .mc-tag{padding:3px 8px;} }
 
-.home-label{font-size:12px;font-weight:800;color:var(--muted);margin:6px 2px -4px;letter-spacing:.04em;}
-.tools{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.tool{display:flex;align-items:center;gap:10px;padding:13px 12px;border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--text);text-decoration:none;min-width:0;}
+/* 下の2つ：認定アプリ／エコー部員として */
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;}
+.tool{display:flex;align-items:center;gap:10px;padding:12px 12px;border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--text);text-decoration:none;min-width:0;cursor:pointer;}
 .tool:active{border-color:var(--orange);}
-.tool.wide{grid-column:1 / -1;}
 .tool-ic{width:32px;height:32px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--orange-bg);border:1px solid rgba(255,147,5,.25);color:var(--orange-light);}
 .tool-ic svg{width:16px;height:16px;}
 .tool.must .tool-ic{background:var(--orange);color:var(--black);border-color:var(--orange);}
 .tool-body{flex:1;min-width:0;}
 .tool-title{display:block;font-size:13px;font-weight:800;line-height:1.35;}
 .tool-desc{display:block;font-size:10.5px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tool-badge{font-size:10px;font-weight:800;color:var(--orange);border:1px solid rgba(255,147,5,.45);border-radius:999px;padding:3px 8px;flex-shrink:0;}
-.home-foot{display:flex;align-items:center;justify-content:space-between;margin-top:6px;padding:14px 4px 0;border-top:1px solid var(--border);background:none;border-left:none;border-right:none;border-bottom:none;width:100%;color:var(--muted);text-align:left;}
+.tool{position:relative;}
+.tool-badge{position:absolute;top:-7px;right:8px;font-size:9.5px;font-weight:800;color:var(--black);background:var(--orange);border-radius:999px;padding:1px 7px;}
+.tool-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tool.admin{grid-column:1 / -1;padding:9px 12px;border-style:dashed;}
+.home-foot{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding:10px 4px 0;border-top:1px solid var(--border);background:none;border-left:none;border-right:none;border-bottom:none;width:100%;color:var(--muted);text-align:left;}
 .home-foot .brand{display:flex;align-items:center;gap:8px;color:var(--text);font-weight:900;letter-spacing:.1em;font-size:14px;}
-.home-foot .brand img{width:26px;height:26px;border-radius:7px;}
+.home-foot .brand img{width:24px;height:24px;border-radius:6px;}
 .home-foot .lnk{font-size:12px;display:flex;align-items:center;gap:3px;}
+
+/* エコー → BASIC / Advanced → 項目 */
+.route{display:flex;align-items:center;gap:14px;padding:18px 16px;border-radius:18px;margin-bottom:10px;cursor:pointer;border:1px solid var(--border);background:var(--card);}
+.route:active{transform:scale(.99);}
+.route .r-name{font-family:"Bebas Neue",sans-serif;font-size:32px;letter-spacing:.05em;line-height:1;}
+.route .r-desc{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6;}
+.route.basic{border-color:rgba(255,147,5,.45);background:linear-gradient(135deg, rgba(255,147,5,.14), var(--card) 60%);}
+.route.basic .r-name{color:var(--orange);}
+.route.adv{border-color:rgba(90,167,232,.45);background:linear-gradient(135deg, rgba(90,167,232,.14), var(--card) 60%);}
+.route.adv .r-name{color:var(--blue);}
+.route .r-go{margin-left:auto;color:var(--dim);flex-shrink:0;}
+.back-btn{display:inline-flex;align-items:center;gap:2px;background:none;border:1px solid var(--border);color:var(--muted);border-radius:999px;padding:5px 11px 5px 7px;font-size:12px;font-weight:700;margin-bottom:12px;}
+.sec-row{display:flex;align-items:center;gap:12px;padding:12px 13px;margin-bottom:7px;background:var(--card);border:1px solid var(--border);border-radius:13px;text-decoration:none;color:var(--text);}
+.sec-row:active{border-color:var(--orange);}
+.sec-n{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:"Bebas Neue",sans-serif;font-size:16px;color:var(--orange);border:1px solid rgba(255,147,5,.5);}
+.adv-list .sec-n{color:var(--blue);border-color:rgba(90,167,232,.5);font-family:inherit;font-size:13px;}
+.sec-t{flex:1;min-width:0;font-size:14px;font-weight:800;line-height:1.4;}
+.sec-t small{display:block;font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.1em;color:var(--dim);font-weight:400;margin-top:1px;}
+.list-h{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--blue);margin:14px 2px 8px;}
+
+/* お知らせ */
+.ann{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;}
+.ann-route{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11.5px;margin-bottom:6px;}
+.ann-from{font-weight:800;color:var(--orange-light);}
+.ann-from.ops{color:#0C0C0C;background:var(--orange);border-radius:5px;padding:0 6px;}
+.ann-to{color:var(--muted);}
+.ann-to b{color:var(--text);font-weight:700;}
+.ann-meta{font-size:10.5px;color:var(--dim);margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.ann-tabs{margin-bottom:12px;}
+.uni-pick{max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;margin-top:8px;}
+.uni-pick label{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer;}
+.uni-pick label:last-child{border-bottom:none;}
+.uni-pick input{width:17px;height:17px;accent-color:var(--orange);}
+.uni-pick small{color:var(--dim);font-size:11px;margin-left:auto;}
+.picked{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.picked span{font-size:11.5px;font-weight:700;background:var(--orange-bg);color:var(--orange-light);border:1px solid rgba(255,147,5,.4);border-radius:999px;padding:3px 9px;}
+
+/* このアプリについて：Project SS */
+.ss-hero{text-align:center;margin:4px 0 18px;}
+.ss-hero img{width:60px;height:60px;border-radius:15px;margin:0 auto 10px;}
+.ss-hero .t{font-size:19px;font-weight:900;line-height:1.5;}
+.ss-hero .t span{color:var(--orange);}
+.ss-hero .s{font-family:"Bebas Neue",sans-serif;letter-spacing:.28em;color:var(--orange-light);font-size:13px;margin-top:2px;}
+.goal{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 14px;margin-bottom:8px;}
+.goal .n{width:28px;height:28px;border-radius:50%;flex-shrink:0;background:var(--orange);color:var(--black);font-family:"Bebas Neue",sans-serif;font-size:17px;display:flex;align-items:center;justify-content:center;}
+.goal p{font-size:13.5px;line-height:1.8;}
+.okite{position:relative;margin-top:18px;border-radius:16px;padding:22px 18px 18px;background:linear-gradient(160deg,#1E1A14,#121110);border:1px solid rgba(233,225,207,.25);overflow:hidden;}
+.okite .k{position:absolute;right:-6px;top:-18px;font-size:96px;font-weight:900;color:rgba(255,147,5,.08);line-height:1;pointer-events:none;}
+.okite .h{font-size:12px;font-weight:800;color:var(--orange-light);letter-spacing:.2em;}
+.okite .rule{font-size:17px;font-weight:900;margin-top:8px;line-height:1.55;}
+.okite .why{font-size:13px;color:#CFC6B4;line-height:1.95;margin-top:10px;}
+.okite .why b{color:var(--text);}
+.sec-label{font-size:12px;font-weight:800;color:var(--muted);margin:16px 2px 8px;letter-spacing:.06em;}
 
 /* お知らせ・部員として・このアプリについて */
 .ann{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;}
@@ -153,7 +209,7 @@
       </div>
       <label class="label" for="j-name">名前 <span class="req">*</span></label>
       <input class="field" id="j-name" maxlength="30" placeholder="山田 太郎" autocomplete="name">
-      <div class="hint">チャットなどで、記名で投稿したときに表示されます（匿名でも投稿できます）。</div>
+      <div class="hint">チャットなどに投稿したときに表示されます。</div>
       <div id="j-year-wrap">
         <label class="label" for="j-year">学年</label>
         <select class="field" id="j-year"></select>
@@ -201,8 +257,8 @@
     </div>
 
     <div class="mains">
-      <!-- メイン1：エコー -->
-      <a class="main-card mc-echo" href="manabu.html">
+      <!-- メイン1：エコー（押すと BASIC / Advanced） -->
+      <div class="main-card mc-echo" role="button" tabindex="0" id="echo-card">
         <svg class="echo-art" viewBox="-16 -20 248 240" aria-hidden="true">
           <defs>
             <filter id="spk" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="2" seed="7" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 .85  0 0 0 0 .62  2.6 0 0 0 -1.25"/></filter>
@@ -226,39 +282,33 @@
         <div class="mc-pre">01 ー LEARN</div>
         <div class="mc-title">エコー</div>
         <div class="mc-lead">はじめてなら BASIC から。<br>深めるなら Advanced へ。</div>
-        <div class="mc-foot"><span class="mc-tag first">BASIC</span><span class="mc-tag">Advanced</span><span class="mc-tag">ラベルで探す</span></div>
+        <div class="mc-foot"><span class="mc-tag first">BASIC</span><span class="mc-tag">Advanced</span></div>
         <span class="mc-go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </a>
+      </div>
 
       <!-- メイン2：エコー部立ち上げ -->
       <a class="main-card mc-launch" href="launch.html">
         <img class="mc-doc" src="assets/doctor.webp" alt="">
         <div class="mc-pre">02 ー BUILD</div>
         <div class="mc-title">エコー部<br>立ち上げ</div>
-        <div class="mc-lead">機器の調達、学び方、部員集め。全国の成功も失敗も、ここに。</div>
+        <div class="mc-lead">学習環境の整備、学び方、部員集め。全国の成功も失敗も、ここに。</div>
         <div class="mc-foot"><span class="mc-tag" id="story-count">エピソード</span></div>
         <span class="mc-go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       </a>
     </div>
 
-    <div class="home-label">はじめに</div>
     <div class="tools">
-      <div class="tool wide must" role="button" tabindex="0" onclick="SS.openSheet('sheet-member')">
+      <a class="tool" href="nintei.html" id="nintei">
+        <span class="tool-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></svg></span>
+        <span class="tool-body"><span class="tool-title">認定アプリ</span><span class="tool-desc">自主練の記録・判定</span></span>
+      </a>
+      <div class="tool must" role="button" tabindex="0" onclick="SS.openSheet('sheet-member')">
         <span class="tool-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span>
-        <span class="tool-body"><span class="tool-title" id="member-title">部員として</span><span class="tool-desc">注意事項</span></span>
+        <span class="tool-body"><span class="tool-title">エコー部員として</span><span class="tool-desc">注意事項</span></span>
         <span class="tool-badge">必読</span>
       </div>
-      <a class="tool" href="chat.html">
-        <span class="tool-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg></span>
-        <span class="tool-body"><span class="tool-title">質問する</span><span class="tool-desc">全国の仲間・指導医に</span></span>
-      </a>
-      <a class="tool" href="calendar.html">
-        <span class="tool-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
-        <span class="tool-body"><span class="tool-title">次の予定</span><span class="tool-desc" id="next-event">読み込み中…</span></span>
-      </a>
-      <a class="tool wide hidden" id="admin-tool" href="admin.html">
-        <span class="tool-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
-        <span class="tool-body"><span class="tool-title">管理画面</span><span class="tool-desc">大学・招待コード・ラベル・お知らせ</span></span>
+      <a class="tool admin hidden" id="admin-tool" href="admin.html">
+        <span class="tool-body"><span class="tool-title">⚙️ 管理画面</span></span>
       </a>
     </div>
 
@@ -269,28 +319,50 @@
   </div>
 </section>
 
+<!-- ===================== エコー：BASIC / Advanced → 項目 ===================== -->
+<div class="sheet-overlay" id="sheet-echo">
+  <div class="sheet">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><div><div class="sheet-title" id="echo-h">エコー</div><div class="sheet-sub" id="echo-sub">いまの自分に合ったルートからどうぞ</div></div><button class="sheet-close" data-close="sheet-echo">✕</button></div>
+    <div class="sheet-body" id="echo-body"></div>
+  </div>
+</div>
+
 <!-- ===================== お知らせ ===================== -->
 <div class="sheet-overlay" id="sheet-ann">
   <div class="sheet">
     <div class="sheet-grab"></div>
-    <div class="sheet-head"><div><div class="sheet-title">お知らせ</div><div class="sheet-sub">ソノサポ運営から</div></div><button class="sheet-close" data-close="sheet-ann">✕</button></div>
+    <div class="sheet-head"><div><div class="sheet-title">お知らせ</div><div class="sheet-sub">運営から・全国の大学から</div></div><button class="sheet-close" data-close="sheet-ann">✕</button></div>
     <div class="sheet-body">
-      <div id="ann-list"></div>
-      <div id="ann-post" class="hidden" style="border-top:1px solid var(--border);padding-top:14px;margin-top:8px;">
-        <label class="label" style="margin-top:0;">お知らせを出す（管理者）</label>
-        <textarea class="field" id="ann-text" maxlength="2000" placeholder="全国の参加者に届きます"></textarea>
+      <div class="seg ann-tabs" id="ann-tabs"><button type="button" data-t="read" class="on">受け取ったお知らせ</button><button type="button" data-t="write">お知らせを出す</button></div>
+
+      <div id="ann-read"><div id="ann-list"></div></div>
+
+      <div id="ann-write" class="hidden">
+        <label class="label" style="margin-top:0;">差出人</label>
+        <div class="field" id="ann-from" style="background:var(--card);"></div>
+        <label class="label">宛先</label>
+        <div class="seg" id="ann-to"><button type="button" data-to="all" class="on">全体へ</button><button type="button" data-to="pick">大学を選ぶ</button></div>
+        <div id="ann-pick" class="hidden">
+          <input class="field" id="ann-uq" placeholder="大学名・都道府県で絞り込み" style="margin-top:8px;">
+          <div class="uni-pick" id="ann-unis"></div>
+          <div class="picked" id="ann-picked"></div>
+        </div>
+        <div class="hint" id="ann-to-hint">全国のすべての参加者に届きます。</div>
+        <label class="label">本文 <span class="req">*</span></label>
+        <textarea class="field" id="ann-text" maxlength="2000" placeholder="例：11/20に合同練習会をします。参加したい大学はチャットで声をかけてください！"></textarea>
         <div class="msg" id="ann-msg"></div>
-        <button class="btn" style="margin-top:10px;" id="ann-btn">投稿する</button>
+        <button class="btn block" style="margin-top:12px;" id="ann-btn">お知らせを出す</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ===================== 部員として（注意事項：内容は要相談） ===================== -->
+<!-- ===================== エコー部員として（注意事項：内容は要相談） ===================== -->
 <div class="sheet-overlay" id="sheet-member">
   <div class="sheet">
     <div class="sheet-grab"></div>
-    <div class="sheet-head"><div><div class="sheet-title" id="member-sheet-title">部員として</div><div class="sheet-sub">注意事項</div></div><button class="sheet-close" data-close="sheet-member">✕</button></div>
+    <div class="sheet-head"><div><div class="sheet-title">エコー部員として</div><div class="sheet-sub">注意事項</div></div><button class="sheet-close" data-close="sheet-member">✕</button></div>
     <div class="sheet-body">
       <!-- ★ 内容は後で相談して差し替える。いまは下書き -->
       <div class="draft-note">この内容は準備中の下書きです。正式な内容は、あとで差し替えます。</div>
@@ -327,21 +399,31 @@
   </div>
 </div>
 
-<!-- ===================== このアプリについて（内容は要相談） ===================== -->
+<!-- ===================== このアプリについて：Project SS ===================== -->
 <div class="sheet-overlay" id="sheet-about">
   <div class="sheet">
     <div class="sheet-grab"></div>
     <div class="sheet-head"><div><div class="sheet-title">このアプリについて</div><div class="sheet-sub">ソノサポ ー Sonography × Support</div></div><button class="sheet-close" data-close="sheet-about">✕</button></div>
     <div class="sheet-body">
-      <!-- ★ 内容は後で相談して差し替える。いまは下書き -->
-      <div class="draft-note">この内容は準備中の下書きです。正式な内容は、あとで差し替えます。</div>
-      <div style="text-align:center;margin:6px 0 18px;">
-        <img src="assets/icon-192.png" alt="" style="width:64px;height:64px;border-radius:16px;margin:0 auto 10px;">
-        <div style="font-size:22px;font-weight:900;letter-spacing:.1em;">ソノサポ</div>
-        <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:.28em;color:var(--orange-light);font-size:13px;">SONOGRAPHY × SUPPORT</div>
+      <div class="ss-hero">
+        <img src="assets/icon-192.png" alt="">
+        <div class="t">エコーを全国の学生へ<br><span>〜 Project SS 〜</span></div>
+        <div class="s">SONOGRAPHY × SUPPORT</div>
       </div>
-      <p class="text-body" style="color:var(--muted);font-size:13px;">全国にPOCUS教育を広げるためのアプリです。和歌山県立医科大学のエコー部 K-PICS の取り組みをもとに、エコーの学び方と、エコー部の立ち上げ・運営のノウハウを全国の医学生で共有します。</p>
-      <div style="margin-top:16px;" class="row-link" role="button" tabindex="0" onclick="SS.closeSheet('sheet-about');SS.openSheet('sheet-install');">
+
+      <div class="sec-label">目標</div>
+      <div class="goal"><div class="n">1</div><p>指導医やPOCUS経験者がいない大学でも、初学者がエコーを学び始められる、全国共通のサポート体制をつくる。</p></div>
+      <div class="goal"><div class="n">2</div><p>エコーの基礎技術の到達度を確かめる認定試験を、全国で実施する。</p></div>
+      <div class="goal"><div class="n">3</div><p>基礎を身につけた学生がさらに深く・広く学び、その学びを全国で共有できる場をつくる。</p></div>
+
+      <div class="okite">
+        <div class="k">掟</div>
+        <div class="h">掟</div>
+        <div class="rule">「教える」という言葉を<br>使うべからず</div>
+        <div class="why">エコーの道は奥深く、我々もまだ道半ば。<br>人に教えられるほど極めてはいない。<br>あるのは<b>「学びの共有」</b>のみ。</div>
+      </div>
+
+      <div style="margin-top:18px;" class="row-link" role="button" tabindex="0" onclick="SS.closeSheet('sheet-about');SS.openSheet('sheet-install');">
         <div class="row-ic">📲</div><div class="row-body"><div class="row-title">ホーム画面に追加する</div><div class="row-desc">アプリのように使えます</div></div>
       </div>
       <div class="hint" style="text-align:center;margin-top:12px;" id="app-ver"></div>
@@ -452,15 +534,13 @@ SS.$('#forgot-btn').onclick = async () => {
 // ================================================================
 // ホーム
 // ================================================================
+
 async function loadHome(){
   const me = SS.me;
   SS.$('#avatar').textContent = (me.name || '?').slice(0, 1);
   SS.$('#greet-name').textContent = 'こんにちは、' + (me.name || '') + ' さん';
   const yr = me.role === 'member' ? SS.yearLabel(me.year) : '';
   SS.$('#greet-sub').textContent = [SS.univLabel(), yr, SS.ROLE_LABEL[me.role]].filter(Boolean).join(' ・ ');
-  const g = SS.univ && SS.univ.group_name;
-  SS.$('#member-title').textContent = (g || 'エコー部') + 'の部員として';
-  SS.$('#member-sheet-title').textContent = (g || 'エコー部') + 'の部員として';
   SS.$('#admin-tool').classList.toggle('hidden', !SS.isAdmin());
   SS.$('#app-ver').textContent = 'バージョン ' + SS_CONFIG.APP_VERSION;
   SS.tabbar('home');
@@ -471,19 +551,60 @@ async function loadHome(){
   SS.$('#install').onclick = () => SS.openSheet('sheet-install');
   SS.$('#install-x').onclick = (e) => { e.stopPropagation(); SS.$('#install').style.display = 'none'; localStorage.setItem('ss_install_x', '1'); };
 
-  // 小さな情報（失敗しても画面は出す）
+
   sb.from('stories').select('id', { count: 'exact', head: true }).then(({ count }) => {
     SS.$('#story-count').textContent = 'エピソード ' + (count || 0) + '件';
-  });
-  const today = new Date(); const ts = today.getFullYear() + '-' + SS.pad(today.getMonth()+1) + '-' + SS.pad(today.getDate());
-  sb.from('events').select('title,event_date').gte('event_date', ts).order('event_date').limit(1).then(({ data }) => {
-    const e = data && data[0];
-    SS.$('#next-event').textContent = e ? (Number(e.event_date.slice(5,7)) + '/' + Number(e.event_date.slice(8,10)) + ' ' + e.title) : '予定はまだありません';
   });
   refreshBell();
 }
 
+// ---------- エコー → BASIC / Advanced → 項目 ----------
+let ECHO_SECS = null;
+async function echoSections(){
+  if(ECHO_SECS) return ECHO_SECS;
+  const { data } = await sb.from('sections').select('id,side,grp,title,subtitle,sort_order,parent_id').is('parent_id', null).order('sort_order').order('created_at');
+  ECHO_SECS = data || [];
+  return ECHO_SECS;
+}
+const CHEV = '<svg class="r-go" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function echoRoutes(){
+  SS.$('#echo-h').textContent = 'エコー';
+  SS.$('#echo-sub').textContent = 'いまの自分に合ったルートからどうぞ';
+  SS.$('#echo-body').innerHTML = `
+    <div class="route basic" data-route="basic"><div><div class="r-name">BASIC</div><div class="r-desc">はじめての人はここから。①から順番に進めば、認定試験まで迷いません。</div></div>${CHEV}</div>
+    <div class="route adv" data-route="advanced"><div><div class="r-name">Advanced</div><div class="r-desc">基礎を身につけたら、分野別にさらに深く・広く。</div></div>${CHEV}</div>`;
+  SS.$$('#echo-body [data-route]').forEach(el => el.onclick = () => echoList(el.dataset.route));
+}
+async function echoList(side){
+  const body = SS.$('#echo-body');
+  body.innerHTML = '<div class="loading">読み込み中</div>';
+  const secs = (await echoSections()).filter(s => s.side === side);
+  SS.$('#echo-h').textContent = side === 'basic' ? 'BASIC' : 'Advanced';
+  SS.$('#echo-sub').textContent = side === 'basic' ? 'まずはここから' : '学びを深める';
+  const row = (s, n) => `<a class="sec-row" href="manabu.html#sec-${s.id}"><span class="sec-n">${n}</span><span class="sec-t">${SS.esc(s.title)}${s.subtitle ? `<small>${SS.esc(s.subtitle)}</small>` : ''}</span>${CHEV}</a>`;
+  let h = '<button type="button" class="back-btn" id="echo-back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>もどる</button>';
+  if(side === 'basic'){
+    h += secs.map((s, i) => row(s, SS.pad(i + 1))).join('') || '<div class="empty">まだ項目がありません</div>';
+  } else {
+    const f = secs.filter(s => s.grp === 'field'), o = secs.filter(s => s.grp === 'other');
+    h += '<div class="adv-list"><div class="list-h">分野別</div>' + (f.map(s => row(s, '●')).join('') || '<div class="hint">まだありません</div>')
+       + '<div class="list-h">その他</div>' + (o.map(s => row(s, '●')).join('') || '<div class="hint">まだありません</div>') + '</div>';
+  }
+  h += `<a class="btn ghost orange block" style="margin-top:8px;" href="manabu.html#${side}">${side === 'basic' ? 'BASIC' : 'Advanced'} のページをひらく</a>`;
+  body.innerHTML = h;
+  SS.$('#echo-back').onclick = echoRoutes;
+}
+SS.$('#echo-card').onclick = () => { echoRoutes(); SS.openSheet('sheet-echo'); echoSections(); };
+
 // ---------- お知らせ ----------
+// 差出人：管理者＝「ソノサポ運営」／それ以外＝自分の大学（サーバー側で決まる）
+// 宛先  ：全体（target_univ_ids が空）または、選んだ大学
+let UNIS = null, annPick = new Set(), annTo = 'all';
+async function loadUnis(){
+  if(UNIS) return UNIS;
+  const { data } = await sb.from('universities').select('id,name,short_name,group_name,prefecture').order('sort_order');
+  UNIS = data || []; return UNIS;
+}
 async function refreshBell(){
   const last = SS.me.last_announcement_read_at || '1970-01-01T00:00:00Z';
   const { count } = await sb.from('announcements').select('id', { count: 'exact', head: true }).gt('created_at', last);
@@ -494,30 +615,82 @@ async function refreshBell(){
 async function loadAnn(){
   const list = SS.$('#ann-list');
   list.innerHTML = '<div class="loading">読み込み中</div>';
-  const { data, error } = await sb.from('announcements').select('*').order('created_at', { ascending: false }).limit(40);
+  const [{ data, error }] = await Promise.all([
+    sb.from('announcements').select('*').order('created_at', { ascending: false }).limit(60),
+    loadUnis(), SS.loadOwned(),
+  ]);
   if(error){ list.innerHTML = '<div class="empty">読み込めませんでした</div>'; return; }
   if(!data.length){ list.innerHTML = '<div class="empty">まだお知らせはありません</div>'; return; }
-  list.innerHTML = data.map(a => `<div class="ann"><div class="ann-head"><b>${SS.esc(a.author_name || '運営')}</b><span>${SS.fmtDate(a.created_at)}</span></div>
-    <div class="text-body" style="font-size:13.5px;">${SS.linkify(a.body)}</div>
-    ${SS.isAdmin() ? `<button class="btn danger sm" style="margin-top:8px;" data-del="${a.id}">削除</button>` : ''}</div>`).join('');
+  const uname = id => { const u = UNIS.find(x => x.id === id); return u ? (u.short_name || u.name) : '（大学）'; };
+  list.innerHTML = data.map(a => {
+    const ops = !a.sender_univ_id;
+    const from = ops ? '<span class="ann-from ops">ソノサポ運営</span>' : `<span class="ann-from">${SS.esc(a.sender_label || uname(a.sender_univ_id))}</span>`;
+    const tgts = a.target_univ_ids || [];
+    const to = tgts.length ? tgts.map(id => `<b>${SS.esc(uname(id))}</b>`).join('・') : '<b>全体</b>';
+    const mine = SS.owns(a.id);
+    return `<div class="ann"><div class="ann-route">${from}<span class="ann-to">→ ${to}</span></div>
+      <div class="text-body" style="font-size:13.5px;">${SS.linkify(a.body)}</div>
+      <div class="ann-meta"><span>${SS.esc(a.author_name || '')} ・ ${SS.fmtDate(a.created_at)}</span>
+      ${(mine || SS.isAdmin()) ? `<button class="btn danger sm" data-del="${a.id}">削除</button>` : ''}</div></div>`;
+  }).join('');
   list.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
     if(!confirm('このお知らせを削除しますか？')) return;
-    await sb.from('announcements').delete().eq('id', b.dataset.del); loadAnn();
+    const { error } = await sb.from('announcements').delete().eq('id', b.dataset.del);
+    if(error) return SS.toast(SS.friendly(error));
+    loadAnn();
   });
 }
+function annTab(t){
+  SS.$$('#ann-tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  SS.$('#ann-read').classList.toggle('hidden', t !== 'read');
+  SS.$('#ann-write').classList.toggle('hidden', t !== 'write');
+  if(t === 'write') drawAnnForm();
+}
+SS.$$('#ann-tabs button').forEach(b => b.onclick = () => annTab(b.dataset.t));
+async function drawAnnForm(){
+  SS.$('#ann-from').textContent = SS.isAdmin() ? 'ソノサポ運営' : (SS.univLabel() || '（大学が登録されていません）');
+  await loadUnis();
+  drawUniPick();
+}
+function drawUniPick(){
+  const q = SS.$('#ann-uq').value.trim();
+  const mine = SS.univ ? SS.univ.id : null;
+  SS.$('#ann-unis').innerHTML = UNIS.filter(u => u.id !== mine && (!q || (u.name + (u.short_name || '') + (u.prefecture || '') + (u.group_name || '')).includes(q)))
+    .map(u => `<label><input type="checkbox" value="${u.id}"${annPick.has(u.id) ? ' checked' : ''}>${SS.esc(u.name)}<small>${SS.esc(u.group_name || u.prefecture || '')}</small></label>`).join('') || '<div class="hint" style="padding:10px;">該当なし</div>';
+  SS.$$('#ann-unis input').forEach(i => i.onchange = () => { const id = +i.value; i.checked ? annPick.add(id) : annPick.delete(id); drawPicked(); });
+  drawPicked();
+}
+function drawPicked(){
+  SS.$('#ann-picked').innerHTML = [...annPick].map(id => { const u = UNIS.find(x => x.id === id); return `<span>${SS.esc(u ? (u.short_name || u.name) : id)}</span>`; }).join('');
+  SS.$('#ann-to-hint').textContent = annTo === 'all' ? '全国のすべての参加者に届きます。' : (annPick.size ? annPick.size + '大学に届きます（自分の大学の人も読めます）。' : '届けたい大学にチェックを入れてください。');
+}
+SS.$$('#ann-to button').forEach(b => b.onclick = () => {
+  annTo = b.dataset.to;
+  SS.$$('#ann-to button').forEach(x => x.classList.toggle('on', x === b));
+  SS.$('#ann-pick').classList.toggle('hidden', annTo !== 'pick');
+  drawPicked();
+});
+SS.$('#ann-uq').addEventListener('input', drawUniPick);
 SS.$('#bell').onclick = async () => {
-  SS.openSheet('sheet-ann');
-  SS.$('#ann-post').classList.toggle('hidden', !SS.isAdmin());
+  SS.openSheet('sheet-ann'); annTab('read');
   await loadAnn();
   const now = new Date().toISOString();
   await sb.from('profiles').update({ last_announcement_read_at: now }).eq('id', SS.user.id);
   SS.me.last_announcement_read_at = now; refreshBell();
 };
 SS.$('#ann-btn').onclick = async () => {
-  const t = SS.$('#ann-text').value.trim(); if(!t) return;
-  const { error } = await sb.from('announcements').insert({ body: t, author_name: 'ソノサポ運営' });
+  const t = SS.$('#ann-text').value.trim(), btn = SS.$('#ann-btn');
+  SS.msg('ann-msg');
+  if(!t){ SS.msg('ann-msg', '本文を入力してください。'); return; }
+  if(annTo === 'pick' && !annPick.size){ SS.msg('ann-msg', '宛先の大学を選んでください。'); return; }
+  const targets = annTo === 'pick' ? [...annPick] : [];
+  if(!confirm(targets.length ? targets.length + '大学にお知らせを出します。よろしいですか？' : '全国のすべての参加者にお知らせを出します。よろしいですか？')) return;
+  btn.disabled = true;
+  const { error } = await sb.from('announcements').insert({ body: t, target_univ_ids: targets });
+  btn.disabled = false;
   if(error){ SS.msg('ann-msg', SS.friendly(error)); return; }
-  SS.$('#ann-text').value = ''; SS.msg('ann-msg'); loadAnn();
+  SS.$('#ann-text').value = ''; annPick.clear(); SS.toast('お知らせを出しました');
+  annTab('read'); loadAnn();
 };
 
 // ---------- ホーム画面に追加の手順：端末に合わせて切り替え ----------

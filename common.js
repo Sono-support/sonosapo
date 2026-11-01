@@ -9,7 +9,17 @@
 // ================================================================
 (function(){
   // 読み込み中は中身を隠し、紺色の幕だけ見せる（チラつき防止）
-  document.documentElement.classList.add('ss-boot');
+  const root = document.documentElement;
+  root.classList.add('ss-boot');
+  // iPad をホーム画面から開いたとき：画面のいちばん上は iPadOS が「ぼかし」をかける帯になる。
+  // そこに文字が入るとボヤけるので、上の余白を最低64px確保する（CSS の --ss-top）。
+  try {
+    const ua = navigator.userAgent || '';
+    const isIPad = /iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const standalone = !!navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    if (isIPad) root.classList.add('ss-ipad');
+    if (standalone) root.classList.add('ss-standalone');
+  } catch (e) {}
 })();
 
 // パスワード再設定メールのリンクから来たかどうか（Supabase がURLを消す前に覚えておく）
@@ -228,39 +238,82 @@ SS.authorHtml = (r) => {
 };
 
 // ================================================================
-// 画面の切り替え（多田先生の幕）
+// 画面の切り替え
 // ================================================================
-const CURTAIN_HTML = `
+//  ・アプリを開いたとき／「エコー部立ち上げ」へ行くとき … 多田先生の幕（doc）
+//  ・それ以外 … 全国にエコー教育を届けるため奔走する SS-7 が走り抜ける（4パターンからランダム）
+//      dash    … 黒地にスピード線。右から飛び込んできて、左へ走り去る
+//      glow    … ヘッドライト点灯 → アンダーグローを残して発進
+//      stripes … レーシングストライプが走り、その上を SS-7 が駆け抜ける
+//      city    … 夜の街の SS-7。最後はワープするように吸い込まれる
+//  前のページで「入ってくる」動き、次のページで「出ていく」動きをして、1本の演出に見せる。
+const CAR_PATTERNS = ['dash', 'glow', 'stripes', 'city'];
+const DOC_HTML = `
   <div class="cur-brand"><div class="cur-name">ソノサポ</div><div class="cur-sub">SONOGRAPHY × SUPPORT</div></div>
   <div class="cur-waves"><span class="cur-wave"></span><span class="cur-wave"></span></div>
   <img class="cur-doc" src="assets/doctor.webp" alt="">`;
-function makeCurtain(cls){
+const carHtml = (pat) => `
+  <div class="cc-bg"></div>
+  <div class="cc-stripes"><i></i><i></i><i></i></div>
+  <div class="cc-lines">${'<i></i>'.repeat(9)}</div>
+  <div class="cc-road"></div>
+  <div class="cc-floor"></div>
+  <div class="cc-stage"><div class="cc-trail"></div><img class="cc-ghost" src="assets/${pat === 'glow' ? 'car-glow' : 'car'}.webp" width="1400" height="${pat === 'glow' ? 448 : 439}" alt="" decoding="sync"><img class="cc-car" src="assets/${pat === 'glow' ? 'car-glow' : 'car'}.webp" width="1400" height="${pat === 'glow' ? 448 : 439}" alt="" decoding="sync"></div>
+  <div class="cc-tag">SS-7 ・ SONOGRAPHY × SUPPORT</div>`;
+function makeCurtain(kind, phase){
   let c = document.getElementById('ss-curtain');
-  if(!c){ c = document.createElement('div'); c.id = 'ss-curtain'; c.setAttribute('aria-hidden','true'); c.innerHTML = CURTAIN_HTML; document.body.appendChild(c); }
-  c.className = cls || ''; return c;
+  if(c && c.dataset.kind !== kind){ c.remove(); c = null; }
+  if(!c){
+    c = document.createElement('div'); c.id = 'ss-curtain'; c.setAttribute('aria-hidden', 'true');
+    c.dataset.kind = kind;
+    c.innerHTML = kind === 'doc' ? DOC_HTML : carHtml(kind);
+    document.body.appendChild(c);
+  }
+  c.className = (kind === 'doc' ? '' : 'car p-' + kind) + ' in' + (phase ? ' ' + phase : '');
+  return c;
 }
-// 読み込みが始まったらすぐ幕を出す（前のページから来たときは、そのまま静止した幕から始める）
+function pickPattern(){
+  let last = ''; try{ last = localStorage.getItem('ss_last_pat') || ''; }catch(e){}
+  const pool = CAR_PATTERNS.filter(p => p !== last);
+  const p = pool[Math.floor(Math.random() * pool.length)];
+  try{ localStorage.setItem('ss_last_pat', p); }catch(e){}
+  return p;
+}
+// 読み込みが始まったらすぐ幕を出す（前のページから来たときは、その続きの止まった状態から）
+let _bootCurtain = null;
+function bootCurtain(){
+  if(_bootCurtain) return _bootCurtain;
+  let kind = null;
+  try{ kind = sessionStorage.getItem('ss_nav'); sessionStorage.removeItem('ss_nav'); }catch(e){}
+  if(kind && (kind === 'doc' || CAR_PATTERNS.includes(kind))) _bootCurtain = makeCurtain(kind, '');
+  else _bootCurtain = makeCurtain('doc', 'enter');   // アプリを開いたとき
+  return _bootCurtain;
+}
 document.addEventListener('DOMContentLoaded', () => {
-  let fromNav = false;
-  try{ fromNav = sessionStorage.getItem('ss_nav') === '1'; sessionStorage.removeItem('ss_nav'); }catch(e){}
-  if(document.documentElement.classList.contains('ss-boot')) makeCurtain(fromNav ? 'in' : 'enter in');
+  if(document.documentElement.classList.contains('ss-boot')) bootCurtain();
 });
 // ページの準備ができたら幕を上げる
 SS.reveal = (minMs = 0) => {
   const start = SS._bootAt || Date.now();
   setTimeout(() => {
-    const c = makeCurtain('in');
+    let c = document.getElementById('ss-curtain') || bootCurtain();
+    const kind = c.dataset.kind;
+    c.className = c.className.replace(/\benter\b/, '').trim();
     document.documentElement.classList.remove('ss-boot');
-    requestAnimationFrame(() => { c.classList.add('leave'); });
-    setTimeout(() => c.remove(), 620);
+    requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add('leave')));
+    setTimeout(() => c.remove(), kind === 'doc' ? 620 : 760);
+    // 次の移動にそなえて、SS-7 の画像を先に読み込んでおく
+    setTimeout(() => ['car', 'car-glow', 'car-city'].forEach(n => { const i = new Image(); i.src = 'assets/' + n + '.webp'; }), 900);
   }, Math.max(0, minMs - (Date.now() - start)));
 };
 // 別のページへ移るときは、幕を下ろしてから移動
 SS.go = (href) => {
   if(SS._leaving) return; SS._leaving = true;
-  makeCurtain('enter in');
-  try{ sessionStorage.setItem('ss_nav', '1'); }catch(e){}
-  setTimeout(() => { location.href = href; }, 300);
+  const url = new URL(href, location.href);
+  const kind = /launch\.html$/.test(url.pathname) ? 'doc' : pickPattern();
+  makeCurtain(kind, 'enter');
+  try{ sessionStorage.setItem('ss_nav', kind); }catch(e){}
+  setTimeout(() => { location.href = url.href; }, kind === 'doc' ? 300 : 500);
 };
 document.addEventListener('click', ev => {
   const a = ev.target.closest && ev.target.closest('a[href]');

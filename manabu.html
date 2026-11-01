@@ -18,7 +18,7 @@
 <script src="common.js"></script>
 <style>
 .top{background:linear-gradient(to bottom, rgba(255,147,5,.14), rgba(255,147,5,.03));}
-.top .page-head{padding-top:16px;}
+.top .page-head{padding-top:calc(16px + var(--ss-top));}
 body.adv .top{background:linear-gradient(to bottom, rgba(90,167,232,.16), rgba(90,167,232,.03));}
 .top-title{font-family:"Bebas Neue",sans-serif;font-size:40px;letter-spacing:.04em;line-height:1;}
 .top-title .hl{color:var(--orange);}
@@ -30,9 +30,6 @@ body.adv .flip-btn{color:var(--blue);border-color:rgba(90,167,232,.4);}
 .edit-btn.on{border-style:solid;border-color:var(--orange);color:var(--orange);background:var(--orange-bg);}
 
 /* ラベルの帯 */
-.labelbar{position:sticky;top:0;z-index:60;background:rgba(12,12,12,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding-top:env(safe-area-inset-top);}
-.labelbar-in{max-width:680px;margin:0 auto;padding:9px 16px;display:flex;align-items:center;gap:8px;}
-.labelbar-k{font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap;flex-shrink:0;}
 .lb-chip{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:11.5px;font-weight:700;border-radius:999px;padding:6px 11px;border:1px solid var(--border-light);background:var(--card);color:var(--text);}
 .lb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .lb-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;border-radius:999px;padding:1px 7px;border:1px solid;white-space:nowrap;line-height:1.6;}
@@ -95,8 +92,6 @@ body.adv .sub-cnt.has{background:var(--blue);}
 .sub-list{display:none;padding:0 10px 10px;}
 .sub.open .sub-list{display:block;}
 
-.ask-link{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:12px;font-weight:700;color:var(--orange-light);text-decoration:none;border:1px solid rgba(255,147,5,.35);border-radius:10px;padding:8px 12px;}
-body.adv .ask-link{color:var(--blue);border-color:rgba(90,167,232,.4);}
 
 /* 編集モード（管理者） */
 .adm{display:none;gap:6px;flex-wrap:wrap;margin-top:10px;}
@@ -117,9 +112,29 @@ body.editing .add-sec{display:block;}
 .ext-d{font-size:12.5px;color:var(--muted);line-height:1.8;margin-top:6px;}
 .ext-a{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(0,0,0,.35);border:1px solid rgba(90,167,232,.4);color:#BFDDF7;font-weight:800;font-size:13px;text-decoration:none;}
 
-/* ラベル別一覧 */
-.lgroup{margin-bottom:14px;}
-.lgroup-h{font-size:11.5px;font-weight:800;color:var(--muted);margin:0 2px 2px;}
+/* 単元ごとの「コメント」「＋資料」 */
+.unit-bar{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center;}
+.ubtn{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,147,5,.35);background:var(--orange-bg);color:var(--orange-light);border-radius:10px;padding:7px 11px;font-size:12px;font-weight:700;}
+.ubtn b{font:600 10px "JetBrains Mono",monospace;background:var(--orange);color:var(--black);border-radius:999px;padding:1px 7px;}
+.ubtn b.zero{background:var(--border-light);color:var(--muted);}
+.ubtn.add{background:transparent;border-style:dashed;}
+.ubtn.own{background:transparent;border-color:var(--border-light);color:var(--muted);}
+.ubtn.own.del{color:var(--ng);border-color:rgba(240,96,96,.4);}
+body.adv .ubtn{border-color:rgba(90,167,232,.4);background:rgba(90,167,232,.08);color:var(--blue);}
+body.adv .ubtn b{background:var(--blue);}
+body.adv .ubtn.add{background:transparent;}
+.mat-adm.mine{display:flex;}
+/* 小項目の追加（その場で入力） */
+.dyn-add{margin-top:8px;}
+.dyn-add-btn{width:100%;padding:10px;border-radius:12px;background:transparent;border:1px dashed rgba(255,147,5,.45);color:var(--orange-light);font-size:12.5px;font-weight:700;}
+body.adv .dyn-add-btn{border-color:rgba(90,167,232,.45);color:var(--blue);}
+.dyn-row{display:flex;gap:6px;margin-top:6px;}
+/* コメント */
+.cmt{border-bottom:1px solid var(--border);padding:11px 0;}
+.cmt .text-body{font-size:13.5px;margin-top:4px;}
+.cmt-form{border-top:1px solid var(--border);margin-top:6px;padding-top:12px;}
+.cmt-priv{font-size:12px;color:#FFC07A;background:rgba(255,147,5,.08);border:1px solid rgba(255,147,5,.3);border-radius:10px;padding:9px 11px;margin-top:8px;}
+.cmt-priv .check{margin-top:0;color:#FFD6A6;}
 
 /* 資料の追加フォーム */
 .lbl-pick{display:flex;flex-wrap:wrap;gap:6px;}
@@ -130,12 +145,6 @@ body.editing .add-sec{display:block;}
 </head>
 <body>
 
-<div class="labelbar">
-  <div class="labelbar-in">
-    <span class="labelbar-k">ラベルで探す</span>
-    <div class="chips scroll" id="labelbar"></div>
-  </div>
-</div>
 
 <div class="stage" id="stage">
   <div class="top">
@@ -180,12 +189,22 @@ body.editing .add-sec{display:block;}
   </div>
 </div>
 
-<!-- ラベル別の資料一覧 -->
-<div class="sheet-overlay" id="sheet-label">
+<!-- 単元のコメント -->
+<div class="sheet-overlay" id="sheet-cmt" data-sticky="1">
   <div class="sheet">
     <div class="sheet-grab"></div>
-    <div class="sheet-head"><div><div class="sheet-title" id="lab-title"></div><div class="sheet-sub">このラベルがついた資料</div></div><button class="sheet-close" data-close="sheet-label">✕</button></div>
-    <div class="sheet-body" id="lab-body"></div>
+    <div class="sheet-head"><div><div class="sheet-title">コメント</div><div class="sheet-sub" id="cmt-where"></div></div><button class="sheet-close" data-close="sheet-cmt">✕</button></div>
+    <div class="sheet-body">
+      <div id="cmt-list"></div>
+      <div class="cmt-form">
+        <label class="label" style="margin-top:0;">💬 質問・訂正・補足・感想など</label>
+        <textarea class="field" id="cmt-text" maxlength="1000" placeholder="気づいたことを気軽にどうぞ。その一言が、次の誰かの学びになります。" style="min-height:72px;"></textarea>
+        <div class="img-picks" id="cmt-imgs"></div>
+        <div class="cmt-priv hidden" id="cmt-privacy"><label class="check"><input type="checkbox" id="cmt-priv">画像に、患者さんの名前・ID・顔など、個人が分かる情報が写っていないことを確認しました</label></div>
+        <div class="msg" id="cmt-msg"></div>
+        <button class="btn block" style="margin-top:12px;" id="cmt-send">コメントする</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -240,10 +259,12 @@ body.editing .add-sec{display:block;}
 // まなぶ：項目・資料はすべて Supabase から読み込む
 //   sections  … BASIC の 1〜7、Advanced の分野・その他、その下の小項目
 //   materials … 各項目の資料（PDF・画像・リンク）。label_ids でラベルを持つ
-//   labels    … 「指導医監修」などのラベル
-// 管理者は右上の「編集」で、項目・資料の追加／並べ替え／削除ができる。
+//   labels    … 「指導医監修」などのラベル（資料につける印）
+//   section_comments … 単元ごとのコメント（だれでも）
+// 管理者・確認者：単元に「＋資料」「＋項目を追加」が出る（確認者は自分で追加したものだけ変更・削除）
+// 管理者：右上の「編集」で、大きな項目の追加・並べ替え・説明の変更・削除もできる。
 // ================================================================
-let SECS = [], MATS = [], LABELS = [];
+let SECS = [], MATS = [], LABELS = [], CMTS = {};
 const openIds = new Set();
 let side = 'basic';
 const LABEL_BY_ID = () => Object.fromEntries(LABELS.map(l => [l.id, l]));
@@ -256,12 +277,17 @@ async function loadAll(){
     sb.from('materials').select('*').order('sort_order').order('created_at'),
     sb.from('labels').select('*').order('sort_order'),
   ]);
+  const c = await sb.from('section_comments').select('section_id');
+  CMTS = {}; (c.data || []).forEach(r => CMTS[r.section_id] = (CMTS[r.section_id] || 0) + 1);
   if(s.error){ SS.$('#basic-list').innerHTML = '<div class="empty">読み込めませんでした。<br>' + SS.esc(SS.friendly(s.error)) + '</div>'; return; }
   SECS = s.data || []; MATS = m.data || []; LABELS = l.data || [];
   render();
 }
 const kids = id => SECS.filter(x => x.parent_id === id);
 const matsOf = id => MATS.filter(x => x.section_id === id);
+const isStaff = () => SS.isStaff();
+const ownSec = s => !!(s && s.created_by && s.created_by === SS.user.id);
+const ownMat = m => !!(m && m.uploaded_by && m.uploaded_by === SS.user.id);
 const countDeep = id => matsOf(id).length + kids(id).reduce((n, k) => n + countDeep(k.id), 0);
 
 function labelTag(l){ return `<span class="lb-tag" style="color:${l.color};border-color:${l.color}66;background:${l.color}14;">${SS.esc(l.name)}</span>`; }
@@ -279,17 +305,28 @@ function matHtml(m){
       ${m.note ? `<div class="mat-note">${SS.esc(m.note)}</div>` : ''}
       <div class="mat-meta">${SS.esc(meta)}</div>
     </div>
-    <div class="mat-adm"><button data-mup="${m.id}" aria-label="上へ">↑</button><button data-medit="${m.id}" aria-label="編集">✎</button><button data-mdel="${m.id}" aria-label="削除">✕</button></div>
+    <div class="mat-adm${!SS.isAdmin() && ownMat(m) ? ' mine' : ''}">${SS.isAdmin() ? `<button data-mup="${m.id}" aria-label="上へ">↑</button>` : ''}<button data-medit="${m.id}" aria-label="編集">✎</button><button data-mdel="${m.id}" aria-label="削除">✕</button></div>
   </div>`;
 }
 function matsHtml(id){
   const ms = matsOf(id);
   return ms.length ? ms.map(matHtml).join('') : '<div class="no-mat">資料は準備中です。</div>';
 }
+// 単元ごとのボタン：コメント（全員）／＋資料（管理者・確認者）／自分で追加した小項目の変更・削除
+function unitBar(sec, isSub){
+  const n = CMTS[sec.id] || 0;
+  return `<div class="unit-bar">
+    <button type="button" class="ubtn" data-cmt="${sec.id}">💬 コメント <b class="${n ? '' : 'zero'}">${n}</b></button>
+    ${isStaff() ? `<button type="button" class="ubtn add" data-addmat="${sec.id}">＋ 資料</button>` : ''}
+    ${isSub && !SS.isAdmin() && ownSec(sec) ? `<button type="button" class="ubtn own" data-edit="${sec.id}">✎ 名前</button><button type="button" class="ubtn own del" data-del="${sec.id}">削除</button>` : ''}
+  </div>`;
+}
+// 小項目をその場で追加（管理者・確認者）
+function addSubHtml(sec){
+  return isStaff() ? `<div class="dyn-add" data-parent="${sec.id}"><button type="button" class="dyn-add-btn">＋ 項目を追加</button></div>` : '';
+}
 function admHtml(sec, isSub){
   return `<div class="adm">
-    <button class="add" data-addmat="${sec.id}">＋ 資料</button>
-    ${isSub ? '' : `<button class="add" data-addsub="${sec.id}">＋ 小項目</button>`}
     <button data-edit="${sec.id}">✎ 名前・説明</button>
     <button data-up="${sec.id}">↑</button><button data-down="${sec.id}">↓</button>
     <button class="del" data-del="${sec.id}">削除</button></div>`;
@@ -302,7 +339,7 @@ function subHtml(k, i){
       <div class="sub-name">${SS.esc(k.title)}${k.subtitle ? `<small>${SS.esc(k.subtitle)}</small>` : ''}</div>
       <span class="sub-cnt${n ? ' has' : ''}">${n}</span>
     </div>
-    <div class="sub-list">${k.description ? `<div class="acc-desc">${SS.esc(k.description)}</div>` : ''}${matsHtml(k.id)}${admHtml(k, true)}</div>
+    <div class="sub-list">${k.description ? `<div class="acc-desc">${SS.esc(k.description)}</div>` : ''}${matsHtml(k.id)}${unitBar(k, true)}${admHtml(k, true)}</div>
   </div>`;
 }
 function accHtml(sec){
@@ -316,10 +353,12 @@ function accHtml(sec){
     </div>
     <div class="acc-wrap"><div class="acc-body"><div class="acc-inner">
       ${sec.description ? `<div class="acc-desc">${SS.esc(sec.description)}</div>` : ''}
+      ${sec.title === '認定アプリ' ? `<a class="btn btn-primary" style="display:flex;justify-content:center;margin:4px 0 10px;text-decoration:none;" href="nintei.html" onclick="event.preventDefault();SS.go('nintei.html')">認定アプリを開く →</a>` : ''}
       ${matsOf(sec.id).map(matHtml).join('')}
       ${ks.map(subHtml).join('')}
-      ${!ks.length && !matsOf(sec.id).length ? '<div class="no-mat">資料は準備中です。</div>' : ''}
-      <a class="ask-link" href="chat.html?new=1&section=${sec.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>このテーマで質問する</a>
+      ${!ks.length && !matsOf(sec.id).length && sec.title !== '認定アプリ' ? '<div class="no-mat">資料は準備中です。</div>' : ''}
+      ${addSubHtml(sec)}
+      ${unitBar(sec, false)}
       ${admHtml(sec, false)}
     </div></div></div>
   </div>`;
@@ -332,11 +371,6 @@ function render(){
     : '<div class="empty">項目がまだありません</div>';
   SS.$('#field-list').innerHTML = tops('advanced', 'field').map(accHtml).join('') || '<div class="empty">まだありません</div>';
   SS.$('#other-list').innerHTML = tops('advanced', 'other').map(accHtml).join('') || '<div class="empty">まだありません</div>';
-  // ラベルの帯
-  SS.$('#labelbar').innerHTML = LABELS.map(l => {
-    const n = MATS.filter(m => (m.label_ids || []).includes(l.id)).length;
-    return `<button type="button" class="lb-chip" data-label="${l.id}"><span class="lb-dot" style="background:${l.color}"></span>${SS.esc(l.name)}<span class="mono" style="color:var(--dim);font-size:10px;">${n}</span></button>`;
-  }).join('');
 }
 
 // ---------- 開く・閉じる ----------
@@ -364,10 +398,10 @@ document.addEventListener('click', async (ev) => {
   const mat = t.closest('[data-mat]');
   if(mat) return openMat(MATS.find(m => m.id === mat.dataset.mat));
 
-  const lab = t.closest('[data-label]');
-  if(lab) return openLabel(+lab.dataset.label);
+  const cm = t.closest('[data-cmt]');
+  if(cm) return openCmt(cm.dataset.cmt);
 
-  const b = t.closest('.adm button, .add-sec');
+  const b = t.closest('.adm button, .add-sec, .unit-bar button');
   if(!b) return;
   if(b.dataset.addSec){ const [s, g] = b.dataset.addSec.split('|'); return openSecForm(null, { side: s, grp: g, parent_id: null }); }
   if(b.dataset.addsub){ const p = SECS.find(x => x.id === b.dataset.addsub); return openSecForm(null, { side: p.side, grp: p.grp, parent_id: p.id }); }
@@ -388,24 +422,88 @@ async function openMat(m){
   if(w) w.location.href = data.signedUrl; else location.href = data.signedUrl;
 }
 
-// ---------- ラベル別 ----------
+// ---------- 場所の名前（例：BASIC ＞ メイン資料 ＞ 心臓） ----------
 function pathOf(secId){
   const s = SECS.find(x => x.id === secId); if(!s) return '';
   const p = s.parent_id ? SECS.find(x => x.id === s.parent_id) : null;
   const sideName = s.side === 'basic' ? 'BASIC' : (s.grp === 'other' ? 'その他' : 'Advanced');
   return [sideName, p && p.title, s.title].filter(Boolean).join(' ＞ ');
 }
-function openLabel(id){
-  const l = LABELS.find(x => x.id === id); if(!l) return;
-  SS.$('#lab-title').innerHTML = `<span class="lb-dot" style="display:inline-block;background:${l.color};margin-right:8px;vertical-align:1px;"></span>${SS.esc(l.name)}`;
-  const ms = MATS.filter(m => (m.label_ids || []).includes(id));
-  const groups = {};
-  ms.forEach(m => { const k = pathOf(m.section_id); (groups[k] = groups[k] || []).push(m); });
-  SS.$('#lab-body').innerHTML = ms.length
-    ? Object.keys(groups).map(k => `<div class="lgroup"><div class="lgroup-h">${SS.esc(k)}</div>${groups[k].map(matHtml).join('')}</div>`).join('')
-    : '<div class="empty">このラベルの資料はまだありません</div>';
-  SS.openSheet('sheet-label');
-  try{ history.replaceState(null, '', '#label-' + id); }catch(e){}
+
+// ================================================================
+// 単元のコメント（だれでも。画像4枚まで）
+// ================================================================
+let cmtSec = null, cmtPicker = null;
+async function openCmt(secId){
+  cmtSec = secId;
+  SS.$('#cmt-where').textContent = pathOf(secId);
+  SS.$('#cmt-text').value = ''; SS.$('#cmt-priv').checked = false; SS.msg('cmt-msg');
+  if(!cmtPicker){ cmtPicker = SS.imagePicker(SS.$('#cmt-imgs'), 4); SS.$('#cmt-imgs').addEventListener('change', () => SS.$('#cmt-privacy').classList.toggle('hidden', !cmtPicker.count())); }
+  cmtPicker.clear(); SS.$('#cmt-privacy').classList.add('hidden');
+  SS.openSheet('sheet-cmt');
+  await drawCmts();
+}
+async function drawCmts(){
+  const list = SS.$('#cmt-list');
+  list.innerHTML = '<div class="loading">読み込み中</div>';
+  const [{ data }] = await Promise.all([sb.from('section_comments').select('*').eq('section_id', cmtSec).order('created_at'), SS.loadOwned()]);
+  const rows = data || [];
+  CMTS[cmtSec] = rows.length;
+  const urls = await SS.signedUrls([].concat(...rows.map(r => r.image_paths || [])));
+  list.innerHTML = rows.length ? rows.map(r => `<div class="cmt"><div class="au">${SS.authorHtml(r)}<span class="au-time">${SS.ago(r.created_at)}</span></div>
+      ${r.body ? `<div class="text-body">${SS.linkify(r.body)}</div>` : ''}${SS.thumbsHtml(r.image_paths, urls)}
+      ${(SS.owns(r.id) || SS.isAdmin()) ? `<button class="btn ghost sm" style="margin-top:6px;" data-delcmt="${r.id}">削除</button>` : ''}</div>`).join('')
+    : '<div class="empty" style="padding:20px 8px;">まだコメントはありません。<br>分からないこと・気づいたことを、気軽にどうぞ。</div>';
+  list.querySelectorAll('[data-delcmt]').forEach(b => b.onclick = async () => {
+    if(!confirm('このコメントを削除しますか？')) return;
+    const r = rows.find(x => x.id === b.dataset.delcmt);
+    const { error } = await sb.from('section_comments').delete().eq('id', r.id);
+    if(error) return SS.toast(SS.friendly(error));
+    if((r.image_paths || []).length) sb.storage.from('posts').remove(r.image_paths);
+    await drawCmts(); render();
+  });
+}
+SS.$('#cmt-send').onclick = async () => {
+  const btn = SS.$('#cmt-send'), body = SS.$('#cmt-text').value.trim(), blobs = cmtPicker.get();
+  SS.msg('cmt-msg');
+  if(!body && !blobs.length){ SS.msg('cmt-msg', 'コメントか画像を入れてください。'); return; }
+  if(blobs.length && !SS.$('#cmt-priv').checked){ SS.msg('cmt-msg', '画像の個人情報の確認にチェックを入れてください。'); return; }
+  btn.disabled = true; btn.textContent = '送信中…';
+  try{
+    const paths = blobs.length ? await SS.uploadImages(blobs) : [];
+    const { error } = await sb.from('section_comments').insert({ section_id: cmtSec, body, image_paths: paths, is_anonymous: false });
+    if(error){ if(paths.length) await sb.storage.from('posts').remove(paths); throw error; }
+    SS.$('#cmt-text').value = ''; cmtPicker.clear(); SS.$('#cmt-privacy').classList.add('hidden');
+    await drawCmts(); render();
+  }catch(e){ SS.msg('cmt-msg', SS.friendly(e)); }
+  finally{ btn.disabled = false; btn.textContent = 'コメントする'; }
+};
+
+// ================================================================
+// 小項目をその場で追加（管理者・確認者）
+// ================================================================
+document.addEventListener('click', async ev => {
+  const t = ev.target;
+  const open = t.closest('.dyn-add-btn');
+  if(open){
+    const box = open.closest('.dyn-add');
+    box.innerHTML = '<input class="field" maxlength="40" placeholder="項目名（例：甲状腺の計測）"><div class="dyn-row"><button type="button" class="btn sm dyn-ok">追加</button><button type="button" class="btn ghost sm dyn-cancel">やめる</button></div><div class="msg"></div>';
+    box.querySelector('input').focus(); return;
+  }
+  if(t.closest('.dyn-cancel')){ t.closest('.dyn-add').innerHTML = '<button type="button" class="dyn-add-btn">＋ 項目を追加</button>'; return; }
+  const ok = t.closest('.dyn-ok');
+  if(ok) addSub(ok.closest('.dyn-add'));
+});
+document.addEventListener('keydown', ev => { if(ev.key === 'Enter' && ev.target.tagName === 'INPUT' && ev.target.closest('.dyn-add')){ ev.preventDefault(); addSub(ev.target.closest('.dyn-add')); } });
+async function addSub(box){
+  const name = box.querySelector('input').value.trim(), msg = box.querySelector('.msg');
+  if(!name){ SS.msg(msg, '項目名を入力してください。'); return; }
+  const p = SECS.find(x => x.id === box.dataset.parent);
+  const sibs = kids(p.id), ok = box.querySelector('.dyn-ok');
+  ok.disabled = true;
+  const { error } = await sb.from('sections').insert({ side: p.side, grp: p.grp, parent_id: p.id, title: name, sort_order: sibs.reduce((m, x) => Math.max(m, x.sort_order), 0) + 10 });
+  if(error){ SS.msg(msg, SS.friendly(error)); ok.disabled = false; return; }
+  openIds.add(p.id); SS.toast('「' + name + '」を追加しました'); loadAll();
 }
 
 // ================================================================
@@ -594,7 +692,6 @@ SS.$('#edit-btn').onclick = () => { const on = !document.body.classList.contains
 function goHash(){
   const h = location.hash.slice(1);
   if(h === 'advanced' || h === 'basic'){ applySide(h); return; }
-  if(h.startsWith('label-')){ openLabel(+h.slice(6)); return; }
   if(h.startsWith('sec-')){
     const id = h.slice(4), s = SECS.find(x => x.id === id); if(!s) return;
     applySide(s.side === 'basic' ? 'basic' : 'advanced');

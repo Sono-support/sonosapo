@@ -87,10 +87,8 @@
   </div>
 
   <div class="filters">
-    <div class="seg" id="scope-seg"><button type="button" data-s="national" class="on">全国</button><button type="button" data-s="university" id="seg-univ">自大学だけ</button></div>
     <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input class="field" id="q" placeholder="キーワードで探す（例：心窩部、肋骨が邪魔）" enterkeyhint="search"></div>
     <div class="chips scroll" id="status-chips"></div>
-    <div class="chips scroll" id="tag-chips"></div>
   </div>
 
   <div id="list"><div class="loading">読み込み中</div></div>
@@ -113,20 +111,15 @@
     <div class="sheet-grab"></div>
     <div class="sheet-head"><div><div class="sheet-title">質問する</div><div class="sheet-sub">困ったこと、なんでもどうぞ</div></div><button class="sheet-close" data-close="sheet-new">✕</button></div>
     <div class="sheet-body">
-      <label class="label" style="margin-top:0;">どこに聞く？</label>
-      <div class="seg" id="n-scope"><button type="button" data-s="national" class="on">全国に聞く</button><button type="button" data-s="university" id="n-scope-univ">自大学だけ</button></div>
-      <div class="hint" id="n-scope-hint">全国の参加者・確認者（指導医）が見られます。</div>
+      <div class="hint" style="margin-top:0;">全国の参加者・確認者（指導医）が見られます。</div>
       <div id="n-section" class="hidden" style="margin-top:12px;"></div>
       <label class="label">タイトル <span class="req">*</span></label>
       <input class="field" id="n-title" maxlength="80" placeholder="例：心窩部からだと右室がうまく出ません">
       <label class="label">くわしく</label>
       <textarea class="field" id="n-body" maxlength="3000" placeholder="どんな状況で、何を試して、どう見えたか。画像があると答えやすくなります。"></textarea>
-      <label class="label">テーマ（いくつでも）</label>
-      <div class="tag-pick" id="n-tags"></div>
       <label class="label">画像（4枚まで）</label>
       <div class="img-picks" id="n-imgs"></div>
       <div class="privacy hidden" id="n-privacy"><label class="check"><input type="checkbox" id="n-priv-ok">画像に、患者さんの名前・ID・顔など、個人が分かる情報が写っていないことを確認しました</label></div>
-      <label class="check"><input type="checkbox" id="n-anon">匿名で質問する（名前・大学を出さない）</label>
       <div class="msg" id="n-msg"></div>
       <button class="btn block" style="margin-top:14px;" id="n-send">質問を投稿する</button>
     </div>
@@ -139,19 +132,16 @@
 //   threads        … 質問（全国 or 自大学だけ）
 //   thread_replies … 返信（画像つき、ベストアンサー）
 //   likes          … 参考になった
-// 名前・大学は投稿時にサーバー側で入れる（匿名なら空）。
+// 名前・大学は投稿時にサーバー側で入れる（匿名の投稿はなし）。
 // ================================================================
-const TAGS = ['心臓','肺','FAST','腹部','頸部','血管','運動器','解剖','機器・設定','部の運営','その他'];
+// 質問は全国で共有（テーマ分け・自大学だけ、はなし）
 const STATUSES = [['all','すべて'],['open','未解決'],['solved','解決済み'],['mine','自分の質問']];
 const PAGE = 20;
 let scope = 'national', status = 'all', tag = null, query = '', rows = [], hasMore = false, likeMap = {};
 let SECTIONS = {};
 
 SS.$('#status-chips').innerHTML = STATUSES.map(([k, l]) => `<button type="button" class="chip${k === 'all' ? ' on' : ''}" data-st="${k}">${l}</button>`).join('');
-SS.$('#tag-chips').innerHTML = TAGS.map(t => `<button type="button" class="chip" data-tag="${t}">#${t}</button>`).join('');
 SS.$$('#status-chips .chip').forEach(b => b.onclick = () => { status = b.dataset.st; SS.$$('#status-chips .chip').forEach(x => x.classList.toggle('on', x === b)); load(); });
-SS.$$('#tag-chips .chip').forEach(b => b.onclick = () => { tag = tag === b.dataset.tag ? null : b.dataset.tag; SS.$$('#tag-chips .chip').forEach(x => x.classList.toggle('on', x.dataset.tag === tag)); load(); });
-SS.$$('#scope-seg button').forEach(b => b.onclick = () => { scope = b.dataset.s; SS.$$('#scope-seg button').forEach(x => x.classList.toggle('on', x === b)); load(); });
 let qTimer; SS.$('#q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(() => { query = SS.$('#q').value.trim(); load(); }, 400); });
 SS.$('#reload').onclick = () => { load(); SS.toast('最新にしました'); };
 
@@ -257,7 +247,7 @@ async function openThread(id){
     ${best.map(repHtml).join('')}${others.map(repHtml).join('') || (best.length ? '' : '<div class="hint">まだ返信はありません。分かる人は気軽に答えてみてください。</div>')}
     <div class="composer">
       <textarea class="field" id="r-text" maxlength="3000" placeholder="返信を書く"></textarea>
-      <div class="comp-row"><div class="img-picks" id="r-imgs" style="margin:0;"></div><label class="check"><input type="checkbox" id="r-anon">匿名</label><button class="btn sm" style="margin-left:auto;" id="r-send">返信する</button></div>
+      <div class="comp-row"><div class="img-picks" id="r-imgs" style="margin:0;"></div><button class="btn sm" style="margin-left:auto;" id="r-send">返信する</button></div>
       <div class="privacy hidden" id="r-privacy"><label class="check"><input type="checkbox" id="r-priv-ok">画像に個人が分かる情報が写っていないことを確認しました</label></div>
       <div class="msg" id="r-msg"></div>
     </div>`;
@@ -294,7 +284,7 @@ async function sendReply(draftKey){
   btn.disabled = true; btn.textContent = '送信中…';
   try{
     const paths = blobs.length ? await SS.uploadImages(blobs) : [];
-    const { error } = await sb.from('thread_replies').insert({ thread_id: cur.id, body, image_paths: paths, is_anonymous: SS.$('#r-anon').checked });
+    const { error } = await sb.from('thread_replies').insert({ thread_id: cur.id, body, image_paths: paths, is_anonymous: false });
     if(error){ if(paths.length) await sb.storage.from('posts').remove(paths); throw error; }
     try{ localStorage.removeItem(draftKey); }catch(e){}
     SS.setSeen(cur.id, cur.reply_count + 1);
@@ -321,12 +311,7 @@ document.addEventListener('click', async ev => {
 let nScope = 'national', nTags = new Set(), nSection = null, newPicker = null;
 const DRAFT_NEW = 'ss_draft_new';
 function drawNew(){
-  SS.$$('#n-scope button').forEach(b => b.classList.toggle('on', b.dataset.s === nScope));
-  SS.$('#n-scope-hint').textContent = nScope === 'national' ? '全国の参加者・確認者（指導医）が見られます。' : (SS.univ ? SS.univ.name + ' の人だけが見られます。' : '');
-  SS.$('#n-tags').innerHTML = TAGS.map(t => `<button type="button" class="${nTags.has(t) ? 'on' : ''}" data-t="${t}">#${t}</button>`).join('');
-  SS.$$('#n-tags button').forEach(b => b.onclick = () => { nTags.has(b.dataset.t) ? nTags.delete(b.dataset.t) : nTags.add(b.dataset.t); drawNew(); });
 }
-SS.$$('#n-scope button').forEach(b => b.onclick = () => { nScope = b.dataset.s; drawNew(); });
 async function openNew(sectionId){
   nSection = sectionId || null; nTags = new Set(); nScope = 'national';
   if(!newPicker){ newPicker = SS.imagePicker(SS.$('#n-imgs'), 4); SS.$('#n-imgs').addEventListener('change', () => SS.$('#n-privacy').classList.toggle('hidden', !newPicker.count())); }
@@ -336,11 +321,10 @@ async function openNew(sectionId){
     if(s){
       SS.$('#n-section').innerHTML = `<span class="sec-link" style="margin:0;">📘 まなぶ：${SS.esc(s.title)} について</span>`;
       SS.$('#n-section').classList.remove('hidden');
-      const guess = TAGS.find(t => s.title.includes(t)); if(guess) nTags.add(guess);
     } else nSection = null;
   }
   try{ const d = JSON.parse(localStorage.getItem(DRAFT_NEW) || '{}'); SS.$('#n-title').value = d.t || ''; SS.$('#n-body').value = d.b || ''; }catch(e){}
-  SS.$('#n-anon').checked = false; SS.$('#n-priv-ok').checked = false; SS.msg('n-msg');
+  SS.$('#n-priv-ok').checked = false; SS.msg('n-msg');
   drawNew(); SS.openSheet('sheet-new');
 }
 ['#n-title','#n-body'].forEach(s => SS.$(s).addEventListener('input', () => { try{ localStorage.setItem(DRAFT_NEW, JSON.stringify({ t: SS.$('#n-title').value, b: SS.$('#n-body').value })); }catch(e){} }));
@@ -353,12 +337,11 @@ SS.$('#n-send').onclick = async () => {
   btn.disabled = true; btn.textContent = '投稿しています…';
   try{
     const paths = blobs.length ? await SS.uploadImages(blobs) : [];
-    const { data, error } = await sb.from('threads').insert({ scope: nScope, title, body, tags: [...nTags], section_id: nSection, image_paths: paths, is_anonymous: SS.$('#n-anon').checked }).select('id').single();
+    const { data, error } = await sb.from('threads').insert({ scope: 'national', title, body, section_id: nSection, image_paths: paths, is_anonymous: false }).select('id').single();
     if(error){ if(paths.length) await sb.storage.from('posts').remove(paths); throw error; }
     try{ localStorage.removeItem(DRAFT_NEW); }catch(e){}
     newPicker.clear(); SS.$('#n-title').value = ''; SS.$('#n-body').value = '';
     SS.closeSheet('sheet-new'); SS.toast('質問を投稿しました');
-    if(scope !== nScope){ scope = nScope; SS.$$('#scope-seg button').forEach(x => x.classList.toggle('on', x.dataset.s === scope)); }
     await load(); SS.setSeen(data.id, 0);
   }catch(e){ SS.msg('n-msg', SS.friendly(e)); }
   finally{ btn.disabled = false; btn.textContent = '質問を投稿する'; }
@@ -368,7 +351,6 @@ SS.$('#n-send').onclick = async () => {
 SS.$('#welcome-x').onclick = () => { SS.$('#welcome').classList.add('hidden'); try{ localStorage.setItem('ss_chat_welcome', '1'); }catch(e){} };
 SS.boot().then(async () => {
   SS.tabbar('chat');
-  if(!SS.univ){ SS.$('#seg-univ').classList.add('hidden'); SS.$('#n-scope-univ').classList.add('hidden'); }
   try{ if(localStorage.getItem('ss_chat_welcome') !== '1') SS.$('#welcome').classList.remove('hidden'); }catch(e){}
   const p = new URLSearchParams(location.search);
   await load();

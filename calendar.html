@@ -213,14 +213,13 @@ async function openDetail(id){
     <div class="d-sec"><div class="d-sec-h"><span>参加</span><span id="att-count" class="mono" style="font-size:11px;color:var(--muted);"></span></div><div id="att-box"><div class="loading"></div></div></div>
     <div class="d-sec"><div class="d-sec-h">感想・学んだこと</div><div id="imp-list"><div class="loading"></div></div>
       <textarea class="field" id="imp-text" maxlength="1000" placeholder="どんな会だったか、学んだことを残そう" style="min-height:70px;"></textarea>
-      <label class="check"><input type="checkbox" id="imp-anon">匿名で投稿する</label>
       <button class="btn sm" style="margin-top:10px;" id="imp-send">投稿する</button></div>`;
   SS.openSheet('sheet-detail');
   const de = SS.$('#d-edit'); if(de) de.onclick = () => { SS.closeSheet('sheet-detail'); openForm(e); };
   const dd = SS.$('#d-del'); if(dd) dd.onclick = async () => { if(!confirm('この予定を削除しますか？')) return; const { error } = await sb.from('events').delete().eq('id', e.id); if(error) return SS.toast(SS.friendly(error)); SS.closeSheet('sheet-detail'); load(); };
   SS.$('#imp-send').onclick = async () => {
     const t = SS.$('#imp-text').value.trim(); if(!t) return;
-    const { error } = await sb.from('event_impressions').insert({ event_id: e.id, body: t, is_anonymous: SS.$('#imp-anon').checked });
+    const { error } = await sb.from('event_impressions').insert({ event_id: e.id, body: t, is_anonymous: false });
     if(error) return SS.toast(SS.friendly(error));
     SS.$('#imp-text').value = ''; loadImps(e);
   };
