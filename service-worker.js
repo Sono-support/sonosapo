@@ -3,7 +3,7 @@
 // ・画面（html・css・js）は、ふだんは常にネットから最新を読み込み、電波がないときだけ保存しておいたものを使う
 // ・画像（assets の中）は、保存しておいたものをすぐ使う（画面切り替えの車がすぐ出るように）
 // ・画面を直して公開したら、下の VERSION の数字を1つ上げると、古い保存分が確実に消えます
-const VERSION = 'sonosapo-v5';
+const VERSION = 'sonosapo-v7';
 const SHELL = [
   './', './index.html', './manabu.html', './calendar.html', './chat.html', './launch.html', './account.html', './nintei.html', './legal.html',
   './common.css', './common.js', './config.js', './manifest.json', './vendor/supabase-js-2.117.3.js',

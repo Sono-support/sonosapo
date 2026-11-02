@@ -22,29 +22,28 @@
     if (isIPad) root.classList.add('ss-ipad');
     if (standalone) root.classList.add('ss-standalone');
   } catch (e) {}
-  // iPhone をホーム画面から開いたとき、iOS が「表示できる範囲」を実際の画面より短く計算して、
-  // 下のタブバーが浮き、その下に隙間ができることがある（iOS 側の不具合）。
-  // 実際の画面の高さとの差（＝隙間）を測って、タブバーなどをその分だけ下へずらす（CSS の --ss-gap）。
-  function fitGap(){
-    let gap = 0;
+  // iPhone をホーム画面から開いたとき、iOS が「表示できる範囲」を実際の画面より短く計算することがある（iOS 側の不具合）。
+  // そうなると、画面の下にくっつけたもの（タブバー・画面切り替えの幕・下から出る画面）が浮いて、下に黒い帯ができる。
+  // 対策：iPhone のホーム画面アプリでは、iOS の計算に頼らず「画面そのものの高さ」を使い、
+  //       それらを画面の上から「画面の高さぶん」の位置に置く（CSS の --app-h と html.ss-fullfix）。
+  function fitHeight(){
     try {
       const ua = navigator.userAgent || '';
       const iphone = /iPhone|iPod/.test(ua);
       const standalone = !!navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-      const portrait = window.innerHeight > window.innerWidth;
-      if (iphone && standalone && portrait) {
-        const screenH = Math.max(screen.height, screen.width);
-        const d = Math.round(screenH - window.innerHeight);
-        if (d > 0 && d < 160) gap = d;
-      }
+      if (!iphone || !standalone) { root.classList.remove('ss-fullfix'); return; }
+      const portrait = window.matchMedia('(orientation: portrait)').matches;
+      const h = portrait ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width);
+      root.style.setProperty('--app-h', h + 'px');
+      // ホームボタンのない iPhone（画面の高さ 812 以上）は、下に必ず 34px の余白（ホームバーの場所）をとる
+      root.style.setProperty('--sab', h >= 812 && portrait ? 'max(env(safe-area-inset-bottom, 0px), 34px)' : 'env(safe-area-inset-bottom, 0px)');
+      root.classList.add('ss-fullfix');
+      window.SS_APP_H = h;
     } catch (e) {}
-    root.style.setProperty('--ss-gap', gap + 'px');
-    window.SS_GAP = gap;
   }
-  fitGap();
-  ['load', 'resize', 'orientationchange', 'pageshow'].forEach(ev => window.addEventListener(ev, () => { fitGap(); setTimeout(fitGap, 300); }));
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(fitGap, 100); });
-  window.SS_fitGap = fitGap;
+  fitHeight();
+  window.addEventListener('orientationchange', () => setTimeout(fitHeight, 200));
+  window.addEventListener('resize', fitHeight);
 })();
 
 // パスワード再設定メールのリンクから来たかどうか（Supabase がURLを消す前に覚えておく）
@@ -426,7 +425,7 @@ SS.showDiag = () => {
     '表示範囲: ' + innerWidth + ' x ' + innerHeight,
     '画面(端末): ' + screen.width + ' x ' + screen.height,
     '上の余白: ' + top + ' ／ 下の余白: ' + bottom,
-    '隙間の補正: ' + (window.SS_GAP || 0) + 'px',
+    '高さの補正: ' + (window.SS_APP_H ? window.SS_APP_H + 'px（画面の高さを使用）' : 'なし'),
     'タブバーの下端: ' + (r ? Math.round(r.bottom) : '-'),
     'ホーム画面から起動: ' + (SS.isStandalone() ? 'はい' : 'いいえ'),
     '端末: ' + (navigator.userAgent.match(/(iPhone|iPad|Android)[^;)]*/) || ['不明'])[0],

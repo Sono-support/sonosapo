@@ -2,7 +2,7 @@
    ソノサポ 共通の見た目（全ページで使う）
    色：黒地 × アイコンのオレンジ × 多田先生イラストの紺
    ================================================================ */
-:root{--ss-top:env(safe-area-inset-top,0px);--ss-gap:0px;
+:root{--ss-top:env(safe-area-inset-top,0px);
   --orange:#FF9305; --orange-light:#FFB04D; --orange-dark:#C26E00; --orange-bg:rgba(255,147,5,.09);
   --navy:#14245C; --navy-2:#1C3274; --navy-light:#8FA6E8;
   --black:#0C0C0C; --dark:#141414; --card:#1A1A1A; --card-2:#202020;
@@ -13,9 +13,8 @@
   --tabbar-h:64px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html{background:var(--black);-webkit-text-size-adjust:100%;overscroll-behavior-y:none;}
+html{background:var(--black);-webkit-text-size-adjust:100%;}
 body{
-  overscroll-behavior-y:none;
   background:var(--black);color:var(--text);
   font-family:"Noto Sans JP",system-ui,-apple-system,sans-serif;
   min-height:100vh;min-height:100dvh;-webkit-tap-highlight-color:transparent;
@@ -44,9 +43,8 @@ a{color:inherit;}
 html.ss-boot{background:var(--navy);}
 html.ss-boot.ss-boot-car{background:#000;}
 html.ss-boot body > *:not(#ss-curtain){visibility:hidden;}
-html.ss-boot body{overflow:hidden;}
 #ss-curtain{
-  position:fixed;inset:0;bottom:calc(-1 * var(--ss-gap));z-index:5000;pointer-events:none;overflow:hidden;
+  position:fixed;inset:0;z-index:5000;pointer-events:none;overflow:hidden;
   background:
     radial-gradient(120% 80% at 50% 108%, rgba(255,147,5,.22), transparent 58%),
     radial-gradient(90% 60% at 50% 0%, #1F3A86, transparent 70%),
@@ -175,7 +173,7 @@ button.chip{padding:6px 12px;font-size:12px;}
    ボトムシート・モーダル
    ================================================================ */
 .sheet-overlay{
-  position:fixed;inset:0;bottom:calc(-1 * var(--ss-gap));z-index:700;display:none;align-items:flex-end;justify-content:center;
+  position:fixed;inset:0;z-index:700;display:none;align-items:flex-end;justify-content:center;
   background:rgba(0,0,0,.72);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
 }
 .sheet-overlay.open{display:flex;}
@@ -210,7 +208,7 @@ button.chip{padding:6px 12px;font-size:12px;}
 /* 画像 */
 .thumbs{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
 .thumbs img{width:92px;height:92px;object-fit:cover;border-radius:10px;border:1px solid var(--border-light);cursor:zoom-in;background:var(--card);}
-.lightbox{position:fixed;inset:0;bottom:calc(-1 * var(--ss-gap));z-index:6000;background:rgba(0,0,0,.94);display:flex;align-items:center;justify-content:center;padding:14px;}
+.lightbox{position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,.94);display:flex;align-items:center;justify-content:center;padding:14px;}
 .lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px;}
 .img-picks{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
 .img-pick{position:relative;width:70px;height:70px;border-radius:10px;overflow:hidden;border:1px solid var(--border-light);}
@@ -224,7 +222,7 @@ button.chip{padding:6px 12px;font-size:12px;}
 
 /* トースト */
 #ss-toast{
-  position:fixed;left:50%;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 18px - var(--ss-gap));transform:translateX(-50%) translateY(20px);
+  position:fixed;left:50%;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 18px);transform:translateX(-50%) translateY(20px);
   background:#262626;border:1px solid var(--border-light);color:var(--text);font-size:13px;font-weight:700;
   padding:10px 16px;border-radius:999px;z-index:6500;opacity:0;pointer-events:none;transition:all .25s var(--ease);
   max-width:calc(100vw - 32px);text-align:center;
@@ -233,7 +231,7 @@ button.chip{padding:6px 12px;font-size:12px;}
 
 /* 右下の＋ボタン */
 .fab{
-  position:fixed;right:18px;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 16px - var(--ss-gap));z-index:250;
+  position:fixed;right:18px;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 16px);z-index:250;
   height:52px;padding:0 20px 0 16px;border-radius:999px;border:none;background:var(--orange);color:var(--black);
   font-weight:800;font-size:14px;display:flex;align-items:center;gap:6px;box-shadow:0 10px 26px rgba(0,0,0,.5);
 }
@@ -244,7 +242,7 @@ button.chip{padding:6px 12px;font-size:12px;}
    下のタブバー
    ================================================================ */
 .tabbar{
-  position:fixed;left:0;right:0;bottom:calc(-1 * var(--ss-gap));z-index:300;
+  position:fixed;left:0;right:0;z-index:300;
   background:rgba(18,18,18,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border-top:1px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);
 }
@@ -386,7 +384,7 @@ button.chip{padding:6px 12px;font-size:12px;}
   -webkit-mask-image:linear-gradient(transparent, #000 14%, #000 86%, transparent);mask-image:linear-gradient(transparent, #000 14%, #000 86%, transparent);}
 #ss-curtain.p-city .cc-stage{display:none;}
 #ss-curtain.p-city .cc-lines{display:block;opacity:0;}
-#ss-curtain.p-city .cc-tag{top:auto;bottom:calc(14% + env(safe-area-inset-bottom) + var(--ss-gap));}
+#ss-curtain.p-city .cc-tag{top:auto;bottom:calc(14% + env(safe-area-inset-bottom));}
 #ss-curtain.p-city.enter{animation:ccBgIn .2s linear both;}
 #ss-curtain.p-city.enter .cc-bg{animation:cityIn .45s cubic-bezier(.2,.8,.2,1) both;}
 #ss-curtain.p-city.enter .cc-tag{animation:ccBgIn .25s linear .25s both;}
@@ -414,3 +412,22 @@ html.ss-ipad.ss-standalone{--ss-top:max(env(safe-area-inset-top,0px),64px);}
 /* 小さなボタン（通報など） */
 .mini-btn{border:1px solid var(--border-light);background:transparent;color:var(--muted);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;}
 .mini-btn[data-report]{color:var(--dim);border-color:var(--border);}
+
+/* ================================================================
+   iPhone のホーム画面アプリ：iOS が表示範囲を短く計算しても、下に帯が出ないようにする
+   （common.js が html に ss-fullfix と --app-h＝画面の高さ をつける）
+   下にくっつけるものを、すべて「画面の上から --app-h の位置」を基準に置き直す
+   ================================================================ */
+html.ss-fullfix body{min-height:var(--app-h);}
+html.ss-fullfix body.has-tabbar{padding-bottom:calc(var(--tabbar-h) + var(--sab) + 16px);}
+html.ss-fullfix .tabbar{top:calc(var(--app-h) - var(--tabbar-h) - var(--sab));bottom:auto;height:calc(var(--tabbar-h) + var(--sab));padding-bottom:var(--sab);}
+html.ss-fullfix #ss-curtain,
+html.ss-fullfix .sheet-overlay,
+html.ss-fullfix .lightbox,
+html.ss-fullfix #ss-diag{bottom:auto;height:var(--app-h);}
+html.ss-fullfix .fab{bottom:auto;top:calc(var(--app-h) - var(--tabbar-h) - var(--sab) - 16px - 52px);}
+html.ss-fullfix #ss-toast{bottom:auto;top:calc(var(--app-h) - var(--tabbar-h) - var(--sab) - 18px - 46px);}
+html.ss-fullfix .sheet{max-height:calc(var(--app-h) * .9);}
+html.ss-fullfix #sheet-thread .sheet{max-height:calc(var(--app-h) * .94);}
+html.ss-fullfix .sheet-body{padding-bottom:calc(22px + var(--sab));}
+html.ss-fullfix #ss-curtain.p-city .cc-tag{bottom:calc(14% + var(--sab));}
